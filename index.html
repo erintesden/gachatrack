@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a0e17">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>GachaTrack</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* === RESET & ROOT === */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg-deep:#0a0e17;--bg-base:#0f1420;--bg-card:#151c2c;--bg-elevated:#1a2236;--bg-hover:#1e2840;
+  --border:#1e2a40;--border-subtle:#161f32;
+  --text-primary:#f0f4fa;--text-secondary:#c8d0dc;--text-muted:#94a0b4;
+  --accent-hsr:#f0b232;--accent-zzz:#00e5c8;--accent-ak:#3b82f6;--accent-akef:#f97316;--accent-lc:#ef4444;
+  --glass:rgba(15,20,32,0.7);--glass-border:rgba(255,255,255,0.06);
+  --radius:12px;--radius-sm:8px;--radius-lg:16px;
+  --shadow:0 4px 24px rgba(0,0,0,0.4);
+  --font-display:'Chakra Petch',sans-serif;--font-body:'DM Sans',sans-serif;--font-mono:'JetBrains Mono',monospace;
+  --sidebar-w:260px;--header-h:56px;
+  --banner-color:#f0b232;--event-color:#3b82f6;--maint-color:#ef4444;
+}
+[data-theme="light"]{
+  --bg-deep:#f0f2f5;--bg-base:#f7f8fa;--bg-card:#ffffff;--bg-elevated:#ffffff;--bg-hover:#eef0f4;
+  --border:#dfe3e8;--border-subtle:#e8ecf0;
+  --text-primary:#1a1e2e;--text-secondary:#5c6578;--text-muted:#9aa3b2;
+  --glass:rgba(255,255,255,0.75);--glass-border:rgba(0,0,0,0.06);
+  --shadow:0 4px 24px rgba(0,0,0,0.08);
+}
+html{font-size:15px;-webkit-text-size-adjust:100%}
+body{font-family:var(--font-body);background:var(--bg-deep);color:var(--text-primary);overflow:hidden;height:100dvh;width:100vw;display:flex;flex-direction:column}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select,textarea{font-family:inherit;color:var(--text-primary);background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;font-size:.9rem;outline:none;transition:border .2s}
+input:focus,select:focus,textarea:focus{border-color:var(--current-accent,var(--accent-hsr))}
+select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238895a7'%3E%3Cpath d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--text-muted)}
+
+/* === LAYOUT === */
+.app{display:flex;height:100dvh;width:100%;overflow:hidden}
+.sidebar{width:var(--sidebar-w);background:var(--bg-base);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;z-index:100;transition:transform .3s cubic-bezier(.4,0,.2,1)}
+.sidebar-header{padding:16px 20px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+.sidebar-header h1{font-family:var(--font-display);font-size:1.15rem;font-weight:700;letter-spacing:1px}
+.sidebar-header .logo-mark{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--accent-hsr),var(--accent-zzz));display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:.75rem;color:#0a0e17}
+.sidebar-nav{flex:1;overflow-y:auto;padding:12px 10px}
+.nav-section{margin-bottom:16px}
+.nav-section-label{font-size:.7rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);padding:0 10px;margin-bottom:6px;font-weight:600}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius-sm);cursor:pointer;transition:all .15s;font-size:.9rem;font-weight:500;position:relative;color:var(--text-secondary)}
+.nav-item:hover{background:var(--bg-hover);color:var(--text-primary)}
+.nav-item.active{background:var(--bg-elevated);color:var(--text-primary)}
+.nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:20px;border-radius:0 3px 3px 0;background:var(--current-accent,var(--accent-hsr))}
+.nav-item .game-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.nav-item .badge{margin-left:auto;background:var(--bg-deep);padding:2px 7px;border-radius:10px;font-size:.7rem;font-family:var(--font-mono);color:var(--text-muted)}
+.sidebar-footer{padding:12px;border-top:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap}
+.sidebar-footer button{flex:1;min-width:0;padding:8px;border-radius:var(--radius-sm);background:var(--bg-elevated);font-size:.75rem;display:flex;align-items:center;justify-content:center;gap:4px;color:var(--text-secondary);transition:all .15s}
+.sidebar-footer button:hover{background:var(--bg-hover);color:var(--text-primary)}
+
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.topbar{height:var(--header-h);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:16px;flex-shrink:0;background:var(--bg-base)}
+.topbar .menu-btn{display:none;width:36px;height:36px;align-items:center;justify-content:center;border-radius:var(--radius-sm);background:var(--bg-elevated);font-size:1.1rem}
+.topbar .page-title{font-family:var(--font-display);font-size:1.1rem;font-weight:600;letter-spacing:.5px}
+.topbar .spacer{flex:1}
+.topbar .theme-toggle{width:36px;height:36px;border-radius:50%;background:var(--bg-elevated);display:flex;align-items:center;justify-content:center;font-size:1rem;transition:all .2s}
+.topbar .theme-toggle:hover{background:var(--bg-hover)}
+
+.content{flex:1;overflow-y:auto;overflow-x:hidden;padding:24px;scroll-behavior:smooth}
+
+/* === TABS === */
+.tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--bg-base);padding:4px;border-radius:var(--radius);border:1px solid var(--border)}
+.tab-btn{padding:8px 18px;border-radius:var(--radius-sm);font-size:.85rem;font-weight:600;transition:all .2s;color:var(--text-muted)}
+.tab-btn:hover{color:var(--text-secondary)}
+.tab-btn.active{background:var(--bg-elevated);color:var(--text-primary);box-shadow:0 2px 8px rgba(0,0,0,0.2)}
+
+/* === CARDS === */
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;margin-bottom:16px;transition:all .2s}
+.card:hover{border-color:var(--glass-border)}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.card-header h3{font-family:var(--font-display);font-size:1rem;font-weight:600;letter-spacing:.3px}
+.card-header .card-actions{display:flex;gap:6px}
+
+/* === GRID === */
+.grid-2{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+.grid-3{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+
+/* === PULL CALCULATOR === */
+.pull-summary{text-align:center;padding:20px;margin-bottom:16px;background:var(--bg-elevated);border-radius:var(--radius-lg);border:1px solid var(--border)}
+.pull-total{font-family:var(--font-display);font-size:2.8rem;font-weight:700;line-height:1;background:linear-gradient(135deg,var(--current-accent,var(--accent-hsr)),color-mix(in srgb,var(--current-accent,var(--accent-hsr)) 60%,#fff));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.pull-breakdown{font-size:.8rem;color:var(--text-muted);margin-top:6px;font-family:var(--font-mono)}
+.pull-section{margin-bottom:16px}
+.pull-section-label{font-size:.75rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:600;margin-bottom:8px}
+.pull-row{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px;transition:border-color .15s}
+.pull-row:hover{border-color:var(--glass-border)}
+.pull-row .pull-info{flex:1;min-width:0}
+.pull-row .pull-name{font-size:.9rem;font-weight:500}
+.pull-row .pull-note{font-size:.7rem;color:var(--text-muted);margin-top:1px}
+.pull-row .pull-input{width:90px;text-align:center;font-family:var(--font-mono);font-size:.9rem}
+.pull-row .pull-result{font-family:var(--font-mono);font-size:.85rem;color:var(--current-accent,var(--accent-hsr));font-weight:600;min-width:70px;text-align:right}
+.pull-row .pull-eq{color:var(--text-muted);font-size:.8rem;margin:0 4px}
+.pull-row .pull-actions{display:flex;gap:4px;margin-left:6px;opacity:0;transition:opacity .15s}
+.pull-row:hover .pull-actions{opacity:1}
+.pull-row .pull-act-btn{width:24px;height:24px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:.7rem;color:var(--text-muted);transition:all .12s}
+.pull-row .pull-act-btn:hover{background:var(--bg-hover);color:var(--text-primary)}
+.pull-row .pull-act-btn.del:hover{background:rgba(239,68,68,.1);color:var(--accent-lc)}
+.pull-add-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border-radius:var(--radius-sm);border:1px dashed var(--border);color:var(--text-muted);font-size:.8rem;cursor:pointer;transition:all .15s;margin-bottom:8px}
+.pull-add-btn:hover{border-color:var(--current-accent,var(--accent-hsr));color:var(--text-secondary);background:var(--bg-card)}
+
+/* === BANNER TYPES === */
+.banner-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;position:relative;transition:all .2s}
+.banner-card:hover{border-color:var(--glass-border)}
+.banner-card .banner-name{font-family:var(--font-display);font-size:.95rem;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.banner-card .banner-pulls{font-family:var(--font-display);font-size:1.6rem;font-weight:700;color:var(--current-accent,var(--accent-hsr));margin-bottom:6px}
+.banner-card .banner-detail{font-size:.75rem;color:var(--text-muted);font-family:var(--font-mono);line-height:1.6}
+.banner-card .banner-accepted{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.banner-chip{font-size:.65rem;padding:3px 8px;border-radius:10px;background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-secondary);font-weight:500}
+.banner-card .banner-actions{position:absolute;top:10px;right:10px;display:flex;gap:4px;opacity:0;transition:opacity .15s}
+.banner-card:hover .banner-actions{opacity:1}
+
+/* === FEED EVENT BADGE === */
+.ev-feed-badge{font-size:.6rem;padding:2px 6px;border-radius:4px;background:rgba(168,85,247,.15);color:#a855f7;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-left:6px}
+.event-card.feed-event{border-style:dashed}
+.event-card .ev-dismiss{position:absolute;top:10px;right:10px;opacity:0;transition:opacity .15s;width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.75rem;color:var(--text-muted)}
+.event-card:hover .ev-dismiss{opacity:1}
+.event-card .ev-dismiss:hover{background:rgba(168,85,247,.15);color:#a855f7}
+
+/* === EVENTS === */
+.event-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;position:relative;overflow:hidden;transition:all .2s}
+.event-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px}
+.event-card[data-type="banner"]::before{background:var(--banner-color)}
+.event-card[data-type="event"]::before{background:var(--event-color)}
+.event-card[data-type="maintenance"]::before{background:var(--maint-color)}
+.event-card .ev-type{font-size:.65rem;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:4px}
+.event-card[data-type="banner"] .ev-type{color:var(--banner-color)}
+.event-card[data-type="event"] .ev-type{color:var(--event-color)}
+.event-card[data-type="maintenance"] .ev-type{color:var(--maint-color)}
+.event-card .ev-name{font-family:var(--font-display);font-size:1rem;font-weight:600;margin-bottom:8px}
+.event-card .ev-game{font-size:.75rem;color:var(--text-muted);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.event-card .ev-game .game-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.event-card .ev-countdown{font-family:var(--font-mono);font-size:1.1rem;font-weight:600;letter-spacing:.5px}
+.event-card .ev-countdown.ending{color:var(--accent-lc)}
+.event-card .ev-dates{font-size:.75rem;color:var(--text-muted);margin-top:8px;font-family:var(--font-mono)}
+.event-card .ev-status{font-size:.7rem;padding:3px 8px;border-radius:10px;font-weight:600;display:inline-block;margin-bottom:6px}
+.ev-status.active{background:rgba(74,222,128,.12);color:#4ade80}
+.ev-status.upcoming{background:rgba(59,130,246,.12);color:#3b82f6}
+.ev-status.ended{background:rgba(239,68,68,.12);color:#ef4444}
+.event-card .ev-delete{position:absolute;top:10px;right:10px;opacity:0;transition:opacity .15s;width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.8rem;color:var(--text-muted)}
+.event-card:hover .ev-delete{opacity:1}
+.event-card .ev-delete:hover{background:rgba(239,68,68,.15);color:var(--accent-lc)}
+.event-card.ev-completed{opacity:.55}
+.event-card.ev-completed .ev-name{text-decoration:line-through}
+.ev-complete-check{width:22px;height:22px;border-radius:6px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;flex-shrink:0;margin-top:10px}
+.ev-complete-check:hover{border-color:var(--text-secondary)}
+.ev-complete-check.checked{background:var(--current-accent,#4ade80);border-color:var(--current-accent,#4ade80)}
+.ev-complete-check.checked::after{content:'✓';color:#0a0e17;font-size:.8rem;font-weight:700}
+.ev-complete-row{display:flex;align-items:center;gap:8px;margin-top:10px}
+.ev-complete-label{font-size:.7rem;color:var(--text-muted);font-weight:500}
+
+/* === DASHBOARD === */
+.dash-game-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;position:relative;overflow:hidden;cursor:pointer;transition:all .2s}
+.dash-game-card:hover{transform:translateY(-2px);box-shadow:var(--shadow);border-color:var(--glass-border)}
+.dash-game-card .accent-bar{position:absolute;top:0;left:0;right:0;height:3px}
+.dash-game-card .game-name{font-family:var(--font-display);font-size:1.05rem;font-weight:700;margin-bottom:14px;letter-spacing:.3px}
+.dash-stat{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:.85rem}
+.dash-stat .label{color:var(--text-secondary)}
+.dash-stat .value{font-family:var(--font-mono);font-weight:600}
+
+/* === MODALS === */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);width:100%;max-width:480px;max-height:80vh;overflow-y:auto;padding:24px}
+.modal h2{font-family:var(--font-display);font-size:1.1rem;margin-bottom:16px}
+.modal .form-group{margin-bottom:14px}
+.modal .form-group label{display:block;font-size:.8rem;color:var(--text-secondary);margin-bottom:5px;font-weight:500}
+.modal .form-group input,.modal .form-group select,.modal .form-group textarea{width:100%}
+.modal .form-row{display:flex;gap:10px}
+.modal .form-row>*{flex:1}
+.modal .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+.btn{padding:8px 18px;border-radius:var(--radius-sm);font-size:.85rem;font-weight:600;transition:all .15s;border:1px solid var(--border)}
+.btn-primary{background:var(--current-accent,var(--accent-hsr));color:#0a0e17;border-color:transparent}
+.btn-primary:hover{opacity:.85}
+.btn-ghost{background:transparent;color:var(--text-secondary)}
+.btn-ghost:hover{background:var(--bg-hover)}
+.btn-sm{padding:6px 12px;font-size:.8rem}
+.btn-icon{width:32px;height:32px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;background:var(--bg-elevated);border:1px solid var(--border);transition:all .15s}
+.btn-icon:hover{background:var(--bg-hover)}
+
+/* === SETTINGS === */
+.setting-section{margin-bottom:28px}
+.setting-section h3{font-family:var(--font-display);font-size:.95rem;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border-subtle)}
+.setting-row .setting-info{flex:1}
+.setting-row .setting-label{font-size:.9rem;font-weight:500}
+.setting-row .setting-desc{font-size:.75rem;color:var(--text-muted);margin-top:2px}
+.toggle{width:42px;height:24px;border-radius:12px;background:var(--bg-deep);border:1px solid var(--border);position:relative;cursor:pointer;transition:all .2s;flex-shrink:0}
+.toggle.on{background:var(--current-accent,var(--accent-hsr));border-color:transparent}
+.toggle::after{content:'';width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform .2s}
+.toggle.on::after{transform:translateX(18px)}
+
+/* === EMPTY STATE === */
+.empty-state{text-align:center;padding:40px 20px;color:var(--text-muted)}
+.empty-state .empty-icon{font-size:2.5rem;margin-bottom:12px;opacity:.4}
+.empty-state p{font-size:.9rem}
+
+/* === ANIMATIONS === */
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.anim-in{animation:fadeIn .3s ease forwards}
+.stagger-1{animation-delay:.05s;opacity:0}
+.stagger-2{animation-delay:.1s;opacity:0}
+.stagger-3{animation-delay:.15s;opacity:0}
+.stagger-4{animation-delay:.2s;opacity:0}
+
+/* === RESPONSIVE === */
+@media(max-width:768px){
+  .sidebar{position:fixed;left:0;top:0;bottom:0;transform:translateX(-100%);z-index:200;box-shadow:var(--shadow)}
+  .sidebar.open{transform:translateX(0)}
+  .sidebar-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:199;display:none}
+  .sidebar-backdrop.show{display:block}
+  .topbar .menu-btn{display:flex}
+  .content{padding:16px}
+  .grid-2,.grid-3{grid-template-columns:1fr}
+  :root{--sidebar-w:280px}
+}
+
+/* === NOTIFICATION TOAST === */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius);padding:14px 20px;font-size:.85rem;z-index:2000;transform:translateY(20px);opacity:0;transition:all .3s;pointer-events:none;max-width:320px;box-shadow:var(--shadow)}
+.toast.show{transform:translateY(0);opacity:1;pointer-events:all}
+</style>
+</head>
+<body>
+<!-- PLACEHOLDER: App shell populated by JS -->
+<div class="app" id="app"></div>
+<div class="modal-overlay" id="modalOverlay"><div class="modal" id="modalContent"></div></div>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+// === DATA LAYER ===
+const GAMES_DEFAULT = [
+  {id:'hsr',name:'Honkai: Star Rail',abbr:'HSR',color:'#f0b232',resetHour:4,
+   pullConfig:{currencies:[
+     {id:'stellar_jade',name:'Stellar Jade',perPull:160,type:'free'},
+     {id:'oneiric_shard',name:'Oneiric Shard',perPull:160,type:'premium',note:'Converts 1:1 to Stellar Jade'}
+   ],tickets:[
+     {id:'pass',name:'Star Rail Pass',note:'Standard banner'},
+     {id:'special_pass',name:'Star Rail Special Pass',note:'Limited banner'}
+   ],bannerTypes:[
+     {id:'standard',name:'Standard Banner',acceptsCurrencies:['stellar_jade','oneiric_shard'],acceptsTickets:['pass']},
+     {id:'limited',name:'Limited Banner',acceptsCurrencies:['stellar_jade','oneiric_shard'],acceptsTickets:['special_pass']}
+   ]}},
+  {id:'zzz',name:'Zenless Zone Zero',abbr:'ZZZ',color:'#00e5c8',resetHour:4,
+   pullConfig:{currencies:[
+     {id:'polychrome',name:'Polychrome',perPull:160,type:'free'},
+     {id:'monochrome',name:'Monochrome',perPull:160,type:'premium',note:'Converts 1:1 to Polychrome'}
+   ],tickets:[
+     {id:'master_tape',name:'Master Tape',note:'Standard banner'},
+     {id:'encrypted_tape',name:'Encrypted Master Tape',note:'Limited banner'}
+   ],bannerTypes:[
+     {id:'standard',name:'Standard Banner',acceptsCurrencies:['polychrome','monochrome'],acceptsTickets:['master_tape']},
+     {id:'limited',name:'Limited Banner',acceptsCurrencies:['polychrome','monochrome'],acceptsTickets:['encrypted_tape']}
+   ]}},
+  {id:'ak',name:'Arknights',abbr:'AK',color:'#3b82f6',resetHour:4,
+   pullConfig:{currencies:[
+     {id:'orundum',name:'Orundum',perPull:600,type:'free'},
+     {id:'originite_prime',name:'Originite Prime',perPull:null,type:'premium',note:'1 OP = 180 Orundum',conversionRate:180,convertsTo:'orundum'}
+   ],tickets:[
+     {id:'hh_permit',name:'Headhunting Permit',note:'All banners'}
+   ],bannerTypes:[
+     {id:'standard',name:'Standard Banner',acceptsCurrencies:['orundum','originite_prime'],acceptsTickets:['hh_permit']},
+     {id:'limited',name:'Limited Banner',acceptsCurrencies:['orundum','originite_prime'],acceptsTickets:['hh_permit']}
+   ]}},
+  {id:'akef',name:'Arknights: Endfield',abbr:'AK:EF',color:'#f97316',resetHour:4,
+   pullConfig:{currencies:[
+     {id:'originium',name:'Originium',perPull:600,type:'free'},
+     {id:'originium_ingot',name:'Originium Ingot',perPull:null,type:'premium',note:'1 Ingot = 180 Originium',conversionRate:180,convertsTo:'originium'}
+   ],tickets:[
+     {id:'hh_contract',name:'Headhunting Contract',note:'All banners'}
+   ],bannerTypes:[
+     {id:'standard',name:'Standard Banner',acceptsCurrencies:['originium','originium_ingot'],acceptsTickets:['hh_contract']},
+     {id:'limited',name:'Limited Banner',acceptsCurrencies:['originium','originium_ingot'],acceptsTickets:['hh_contract']}
+   ]}},
+  {id:'lc',name:'Limbus Company',abbr:'LC',color:'#ef4444',resetHour:4,
+   pullConfig:{currencies:[
+     {id:'lunacy',name:'Lunacy',perPull:130,type:'free'}
+   ],tickets:[
+     {id:'extract_ticket',name:'Extract Ticket',note:'Standard extraction'}
+   ],bannerTypes:[
+     {id:'standard',name:'Standard Extraction',acceptsCurrencies:['lunacy'],acceptsTickets:['extract_ticket']}
+   ]}}
+];
+
+const SAMPLE_EVENTS = [
+  {id:'ev1',gameId:'hsr',name:'Firefly Rerun Banner',type:'banner',start:'2026-03-01T10:00',end:'2026-03-21T14:59'},
+  {id:'ev2',gameId:'hsr',name:'Divergent Universe: Simulated',type:'event',start:'2026-02-28T10:00',end:'2026-03-18T03:59'},
+  {id:'ev3',gameId:'zzz',name:'Miyabi Limited Banner',type:'banner',start:'2026-03-03T10:00',end:'2026-03-24T14:59'},
+  {id:'ev4',gameId:'ak',name:'CC#15 Operation Ashring',type:'event',start:'2026-03-05T16:00',end:'2026-03-19T03:59'},
+  {id:'ev5',gameId:'lc',name:'Walpurgis Night',type:'event',start:'2026-03-01T00:00',end:'2026-03-15T00:00'},
+  {id:'ev6',gameId:'akef',name:'Closed Beta Event',type:'event',start:'2026-03-02T00:00',end:'2026-03-16T00:00'}
+];
+
+class Store {
+  constructor(){
+    this.data = this.load();
+    if(!this.data.initialized) this.initDefaults();
+    this.migrateIfNeeded();
+  }
+  load(){
+    try{return JSON.parse(localStorage.getItem('gachatrack'))||{}}
+    catch(e){return{}}
+  }
+  save(){localStorage.setItem('gachatrack',JSON.stringify(this.data))}
+  initDefaults(){
+    this.data.initialized=true;
+    this.data.games=GAMES_DEFAULT.map(g=>({...g,enabled:true}));
+    this.data.customGames=[];
+    this.data.pullState={};
+    this.data.events=[...SAMPLE_EVENTS];
+    this.data.settings={theme:'dark',feedEnabled:false,feedUrl:'',feedIntervalMin:30};
+    this.data.feedEvents=[];
+    this.data.feedLastFetch=0;
+    this.data.feedDismissed=[];
+    this.data.eventCompleted={};
+    GAMES_DEFAULT.forEach(g=>{
+      this.data.pullState[g.id]={currencies:{},tickets:{}};
+    });
+    this.save();
+  }
+  migrateIfNeeded(){
+    // Migrate from v1: add pull/feed fields if missing
+    if(!this.data.pullState)this.data.pullState={};
+    if(!this.data.feedEvents)this.data.feedEvents=[];
+    if(!this.data.feedLastFetch)this.data.feedLastFetch=0;
+    if(!this.data.feedDismissed)this.data.feedDismissed=[];
+    if(this.data.settings.feedEnabled===undefined)this.data.settings.feedEnabled=false;
+    if(!this.data.settings.feedUrl)this.data.settings.feedUrl='';
+    if(!this.data.settings.feedIntervalMin)this.data.settings.feedIntervalMin=30;
+    // Ensure pullConfig exists on default games
+    this.data.games.forEach(g=>{
+      const def=GAMES_DEFAULT.find(d=>d.id===g.id);
+      if(def&&!g.pullConfig)g.pullConfig=def.pullConfig;
+      if(def&&g.pullConfig&&!g.pullConfig.bannerTypes)g.pullConfig.bannerTypes=def.pullConfig.bannerTypes;
+      if(!this.data.pullState[g.id])this.data.pullState[g.id]={currencies:{},tickets:{}};
+    });
+    if(!this.data.settings.bannerLayout)this.data.settings.bannerLayout='inline';
+    if(!this.data.eventCompleted)this.data.eventCompleted={};
+    // Remove old stamina and daily data
+    delete this.data.staminaState;
+    delete this.data.dailyChecks;
+    delete this.data.dailyLastReset;
+    this.save();
+  }
+  getAllGames(){return[...this.data.games,...(this.data.customGames||[])].filter(g=>g.enabled!==false)}
+  getGame(id){return this.getAllGames().find(g=>g.id===id)}
+  // === PULL CALCULATOR ===
+  getPullState(gameId){
+    return this.data.pullState[gameId]||{currencies:{},tickets:{}};
+  }
+  setPullCurrency(gameId,currencyId,amount){
+    if(!this.data.pullState[gameId])this.data.pullState[gameId]={currencies:{},tickets:{}};
+    this.data.pullState[gameId].currencies[currencyId]=Math.max(0,parseInt(amount)||0);
+    this.save();
+  }
+  setPullTicket(gameId,ticketId,amount){
+    if(!this.data.pullState[gameId])this.data.pullState[gameId]={currencies:{},tickets:{}};
+    this.data.pullState[gameId].tickets[ticketId]=Math.max(0,parseInt(amount)||0);
+    this.save();
+  }
+  _findGame(gameId){
+    const all=[...this.data.games,...(this.data.customGames||[])];
+    return all.find(x=>x.id===gameId);
+  }
+  addPullCurrency(gameId,currency){
+    const g=this._findGame(gameId);
+    if(!g)return;
+    if(!g.pullConfig)g.pullConfig={currencies:[],tickets:[]};
+    g.pullConfig.currencies.push(currency);
+    this.save();
+  }
+  editPullCurrency(gameId,idx,currency){
+    const g=this._findGame(gameId);
+    if(!g||!g.pullConfig)return;
+    const oldId=g.pullConfig.currencies[idx]?.id;
+    // Migrate stored amount if id changed
+    if(oldId&&oldId!==currency.id&&this.data.pullState[gameId]){
+      const amt=this.data.pullState[gameId].currencies[oldId]||0;
+      delete this.data.pullState[gameId].currencies[oldId];
+      this.data.pullState[gameId].currencies[currency.id]=amt;
+    }
+    g.pullConfig.currencies[idx]=currency;
+    this.save();
+  }
+  removePullCurrency(gameId,idx){
+    const g=this._findGame(gameId);
+    if(!g||!g.pullConfig)return;
+    const c=g.pullConfig.currencies[idx];
+    if(c&&this.data.pullState[gameId])delete this.data.pullState[gameId].currencies[c.id];
+    g.pullConfig.currencies.splice(idx,1);
+    this.save();
+  }
+  addPullTicket(gameId,ticket){
+    const g=this._findGame(gameId);
+    if(!g)return;
+    if(!g.pullConfig)g.pullConfig={currencies:[],tickets:[]};
+    g.pullConfig.tickets.push(ticket);
+    this.save();
+  }
+  editPullTicket(gameId,idx,ticket){
+    const g=this._findGame(gameId);
+    if(!g||!g.pullConfig)return;
+    const oldId=g.pullConfig.tickets[idx]?.id;
+    if(oldId&&oldId!==ticket.id&&this.data.pullState[gameId]){
+      const amt=this.data.pullState[gameId].tickets[oldId]||0;
+      delete this.data.pullState[gameId].tickets[oldId];
+      this.data.pullState[gameId].tickets[ticket.id]=amt;
+    }
+    g.pullConfig.tickets[idx]=ticket;
+    this.save();
+  }
+  removePullTicket(gameId,idx){
+    const g=this._findGame(gameId);
+    if(!g||!g.pullConfig)return;
+    const t=g.pullConfig.tickets[idx];
+    if(t&&this.data.pullState[gameId])delete this.data.pullState[gameId].tickets[t.id];
+    g.pullConfig.tickets.splice(idx,1);
+    this.save();
+  }
+  // === BANNER TYPES ===
+  addBannerType(gameId,banner){
+    const g=this._findGame(gameId);
+    if(!g)return;
+    if(!g.pullConfig)g.pullConfig={currencies:[],tickets:[],bannerTypes:[]};
+    if(!g.pullConfig.bannerTypes)g.pullConfig.bannerTypes=[];
+    g.pullConfig.bannerTypes.push(banner);
+    this.save();
+  }
+  editBannerType(gameId,idx,banner){
+    const g=this._findGame(gameId);
+    if(!g||!g.pullConfig||!g.pullConfig.bannerTypes)return;
+    g.pullConfig.bannerTypes[idx]=banner;
+    this.save();
+  }
+  removeBannerType(gameId,idx){
+    const g=this._findGame(gameId);
+    if(!g||!g.pullConfig||!g.pullConfig.bannerTypes)return;
+    g.pullConfig.bannerTypes.splice(idx,1);
+    this.save();
+  }
+  calcBannerPulls(gameId,banner){
+    const game=this.getGame(gameId);
+    if(!game||!game.pullConfig)return{total:0,breakdown:[]};
+    const ps=this.getPullState(gameId);
+    let total=0;
+    const breakdown=[];
+    // Currencies accepted by this banner
+    (banner.acceptsCurrencies||[]).forEach(cid=>{
+      const c=game.pullConfig.currencies.find(x=>x.id===cid);
+      if(!c)return;
+      const amt=ps.currencies[c.id]||0;
+      let pulls=0;
+      if(c.perPull){
+        pulls=Math.floor(amt/c.perPull);
+      }else if(c.conversionRate&&c.convertsTo){
+        const toType=c.convertsToType||'currency';
+        if(toType==='ticket'){
+          const tt=game.pullConfig.tickets.find(x=>x.id===c.convertsTo);
+          if(tt){const ppt=tt.pullsPerTicket||1;pulls=Math.floor(amt*c.conversionRate)*ppt}
+        }else{
+          const tc=game.pullConfig.currencies.find(x=>x.id===c.convertsTo);
+          if(tc&&tc.perPull)pulls=Math.floor(amt*c.conversionRate/tc.perPull);
+        }
+      }
+      if(amt>0||pulls>0)breakdown.push({name:c.name,amount:amt,pulls});
+      total+=pulls;
+    });
+    // Tickets accepted
+    (banner.acceptsTickets||[]).forEach(tid=>{
+      const t=game.pullConfig.tickets.find(x=>x.id===tid);
+      if(!t)return;
+      const amt=ps.tickets[t.id]||0;
+      const ppt=t.pullsPerTicket||1;
+      const pulls=amt*ppt;
+      if(amt>0)breakdown.push({name:t.name,amount:amt,pulls});
+      total+=pulls;
+    });
+    return{total,breakdown};
+  }
+  calcPulls(gameId){
+    const game=this.getGame(gameId);
+    if(!game||!game.pullConfig)return{total:0,fromCurrency:0,fromTickets:0,details:[]};
+    const ps=this.getPullState(gameId);
+    let fromCurrency=0;
+    const details=[];
+    // Calculate currency pulls
+    game.pullConfig.currencies.forEach(c=>{
+      const amt=ps.currencies[c.id]||0;
+      let pulls=0;
+      if(c.perPull){
+        pulls=Math.floor(amt/c.perPull);
+        details.push({name:c.name,amount:amt,pulls,type:'currency',note:c.note});
+      } else if(c.conversionRate&&c.convertsTo){
+        const toType=c.convertsToType||'currency';
+        if(toType==='ticket'){
+          // Currency converts to tickets (e.g., Polychrome -> Encrypted Master Tape)
+          const targetTicket=game.pullConfig.tickets.find(x=>x.id===c.convertsTo);
+          if(targetTicket){
+            const ticketsProduced=Math.floor(amt*c.conversionRate);
+            const ppt=targetTicket.pullsPerTicket||1;
+            pulls=ticketsProduced*ppt;
+            details.push({name:c.name,amount:amt,pulls,type:'currency',note:c.note||`${amt} → ${ticketsProduced} ${targetTicket.name}`});
+          }
+        } else {
+          // Currency converts to another currency (e.g., Originite Prime -> Orundum)
+          const targetCurrency=game.pullConfig.currencies.find(x=>x.id===c.convertsTo);
+          if(targetCurrency&&targetCurrency.perPull){
+            const convertedUnits=amt*c.conversionRate;
+            pulls=Math.floor(convertedUnits/targetCurrency.perPull);
+            details.push({name:c.name,amount:amt,pulls,type:'currency',note:c.note||`${amt} × ${c.conversionRate} = ${convertedUnits} ${targetCurrency.name}`});
+          }
+        }
+      }
+      fromCurrency+=pulls;
+    });
+    // Calculate ticket pulls
+    let fromTickets=0;
+    game.pullConfig.tickets.forEach(t=>{
+      const amt=ps.tickets[t.id]||0;
+      const ppt=t.pullsPerTicket||1;
+      const pulls=amt*ppt;
+      fromTickets+=pulls;
+      details.push({name:t.name,amount:amt,pulls,type:'ticket',note:t.note});
+    });
+    return{total:fromCurrency+fromTickets,fromCurrency,fromTickets,details};
+  }
+  // === EVENTS ===
+  getEvents(gameId){
+    let events=[...(this.data.events||[])];
+    // Merge feed events if enabled
+    if(this.data.settings.feedEnabled&&this.data.feedEvents){
+      const dismissed=new Set(this.data.feedDismissed||[]);
+      const feedEvs=this.data.feedEvents.filter(e=>!dismissed.has(e.id)).map(e=>({...e,_fromFeed:true}));
+      events=[...events,...feedEvs];
+    }
+    return events.filter(e=>!gameId||e.gameId===gameId);
+  }
+  addEvent(ev){
+    ev.id='ev'+Date.now();
+    this.data.events.push(ev);
+    this.save();
+  }
+  removeEvent(id){
+    this.data.events=this.data.events.filter(e=>e.id!==id);
+    this.save();
+  }
+  dismissFeedEvent(id){
+    if(!this.data.feedDismissed)this.data.feedDismissed=[];
+    this.data.feedDismissed.push(id);
+    this.save();
+  }
+  isEventCompleted(id){return!!this.data.eventCompleted[id]}
+  toggleEventCompleted(id){
+    if(!this.data.eventCompleted)this.data.eventCompleted={};
+    if(this.data.eventCompleted[id])delete this.data.eventCompleted[id];
+    else this.data.eventCompleted[id]=true;
+    this.save();
+  }
+  async fetchFeed(){
+    const url=this.data.settings.feedUrl;
+    if(!url)return{ok:false,msg:'No feed URL configured'};
+    try{
+      const resp=await fetch(url);
+      if(!resp.ok)throw new Error(`HTTP ${resp.status}`);
+      const json=await resp.json();
+      if(!json.events||!Array.isArray(json.events))throw new Error('Invalid feed format: missing events array');
+      // Validate and normalize events
+      const events=json.events.filter(e=>e.id&&e.name&&e.start&&e.end).map(e=>({
+        id:e.id,gameId:e.gameId||'unknown',name:e.name,type:e.type||'event',start:e.start,end:e.end
+      }));
+      this.data.feedEvents=events;
+      this.data.feedLastFetch=Date.now();
+      this.save();
+      return{ok:true,count:events.length};
+    }catch(err){
+      return{ok:false,msg:err.message};
+    }
+  }
+  addCustomGame(g){
+    g.id='custom_'+Date.now();
+    g.enabled=true;
+    if(!this.data.customGames)this.data.customGames=[];
+    this.data.customGames.push(g);
+    this.data.pullState[g.id]={currencies:{},tickets:{}};
+    this.save();
+    return g;
+  }
+  removeCustomGame(id){
+    this.data.customGames=(this.data.customGames||[]).filter(g=>g.id!==id);
+    delete this.data.pullState[id];
+    this.data.events=(this.data.events||[]).filter(e=>e.gameId!==id);
+    this.save();
+  }
+  toggleGameEnabled(id){
+    const all=[...this.data.games,...(this.data.customGames||[])];
+    const g=all.find(x=>x.id===id);
+    if(g){g.enabled=g.enabled===false?true:false;this.save()}
+  }
+  exportData(){return JSON.stringify(this.data,null,2)}
+  importData(json){
+    try{this.data=JSON.parse(json);this.save();return true}
+    catch(e){return false}
+  }
+}
+
+const store=new Store();
+
+// === APP CONTROLLER ===
+let currentView='dashboard';
+let currentGame=null;
+let currentTab='pulls';
+let animFrame=null;
+
+function getAccentForGame(gameId){
+  const g=store.getGame(gameId);
+  return g?g.color:'#f0b232';
+}
+
+function setAccent(color){
+  document.documentElement.style.setProperty('--current-accent',color);
+}
+
+// === RENDER ENGINE ===
+function render(){
+  renderSidebar();
+  renderTopbar();
+  renderContent();
+}
+
+function renderSidebar(){
+  const games=store.getAllGames();
+  const sidebar=document.createElement('div');
+  sidebar.className='sidebar';
+  sidebar.id='sidebar';
+  sidebar.innerHTML=`
+    <div class="sidebar-header">
+      <div class="logo-mark">GT</div>
+      <h1>GACHATRACK</h1>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-label">Overview</div>
+        <div class="nav-item ${currentView==='dashboard'?'active':''}" data-view="dashboard">
+          <span style="font-size:1rem">⊞</span> Dashboard
+        </div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Games</div>
+        ${games.map(g=>{
+          const pulls=store.calcPulls(g.id);
+          return`<div class="nav-item ${currentView==='game'&&currentGame===g.id?'active':''}" data-view="game" data-game="${g.id}">
+            <span class="game-dot" style="background:${g.color}"></span>
+            ${g.abbr||g.name}
+            <span class="badge">${pulls.total} pulls</span>
+          </div>`;
+        }).join('')}
+        <div class="nav-item" data-view="addgame" style="color:var(--text-muted);font-size:.85rem">
+          <span style="font-size:1rem">+</span> Add Game
+        </div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">System</div>
+        <div class="nav-item ${currentView==='settings'?'active':''}" data-view="settings">
+          <span style="font-size:1rem">⚙</span> Settings
+        </div>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <button onclick="exportData()" title="Export">⬇ Export</button>
+      <button onclick="document.getElementById('importFile').click()" title="Import">⬆ Import</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+    </div>
+  `;
+  const old=document.getElementById('sidebar');
+  if(old)old.replaceWith(sidebar);
+  else document.getElementById('app').prepend(sidebar);
+
+  sidebar.querySelectorAll('.nav-item[data-view]').forEach(el=>{
+    el.addEventListener('click',()=>{
+      const view=el.dataset.view;
+      if(view==='addgame'){openAddGameModal();return}
+      currentView=view;
+      if(view==='game'){currentGame=el.dataset.game;currentTab='pulls';setAccent(getAccentForGame(currentGame))}
+      else if(view==='dashboard'){setAccent('#f0b232')}
+      else{setAccent('#3b82f6')}
+      closeSidebar();
+      render();
+    });
+  });
+}
+
+function renderTopbar(){
+  let title='Dashboard';
+  if(currentView==='game'&&currentGame){const g=store.getGame(currentGame);title=g?g.name:'Game'}
+  else if(currentView==='settings')title='Settings';
+
+  let el=document.getElementById('topbar');
+  if(!el){
+    el=document.createElement('div');
+    el.className='topbar';
+    el.id='topbar';
+    const main=document.getElementById('app').querySelector('.main')||createMain();
+    main.prepend(el);
+  }
+  el.innerHTML=`
+    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+    <span class="page-title">${title}</span>
+    <span class="spacer"></span>
+    <button class="theme-toggle" onclick="toggleTheme()">${store.data.settings.theme==='dark'?'☀':'☾'}</button>
+  `;
+}
+
+function createMain(){
+  const main=document.createElement('div');
+  main.className='main';
+  main.innerHTML='<div class="content" id="content"></div>';
+  document.getElementById('app').appendChild(main);
+  return main;
+}
+
+function renderContent(){
+  let content=document.getElementById('content');
+  if(!content){createMain();content=document.getElementById('content')}
+  if(currentView==='dashboard')renderDashboard(content);
+  else if(currentView==='game')renderGameView(content);
+  else if(currentView==='settings')renderSettings(content);
+}
+
+// === DASHBOARD ===
+function renderDashboard(el){
+  const games=store.getAllGames();
+  el.innerHTML=`
+    <div style="margin-bottom:20px">
+      <h2 style="font-family:var(--font-display);font-size:1.3rem;font-weight:700;letter-spacing:.5px;margin-bottom:4px">Overview</h2>
+      <p style="color:var(--text-muted);font-size:.85rem">Track all your gacha games in one place</p>
+    </div>
+    <div class="grid-2" id="dashGrid"></div>
+    <div style="margin-top:28px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <h3 style="font-family:var(--font-display);font-size:1.05rem;font-weight:600">Active Events & Banners</h3>
+        <button class="btn btn-sm btn-ghost" onclick="openAddEventModal()">+ Add</button>
+      </div>
+      <div class="grid-3" id="dashEvents"></div>
+    </div>
+  `;
+  const grid=document.getElementById('dashGrid');
+  games.forEach((g,i)=>{
+    const pulls=store.calcPulls(g.id);
+    const banners=g.pullConfig?.bannerTypes||[];
+    const card=document.createElement('div');
+    card.className=`dash-game-card anim-in stagger-${Math.min(i+1,4)}`;
+    let bannerLines='';
+    banners.forEach(b=>{
+      const bp=store.calcBannerPulls(g.id,b);
+      bannerLines+=`<div class="dash-stat" style="padding-left:12px"><span class="label" style="font-size:.7rem">${b.name}</span><span class="value" style="font-size:.8rem">${bp.total} pulls</span></div>`;
+    });
+    card.innerHTML=`
+      <div class="accent-bar" style="background:${g.color}"></div>
+      <div class="game-name" style="color:${g.color}">${g.name}</div>
+      <div class="dash-stat"><span class="label">Total Pulls</span><span class="value">${pulls.total} available</span></div>
+      ${bannerLines}
+    `;
+    card.addEventListener('click',()=>{currentView='game';currentGame=g.id;currentTab='pulls';setAccent(g.color);render()});
+    grid.appendChild(card);
+  });
+  renderDashEvents();
+}
+
+function renderDashEvents(){
+  const container=document.getElementById('dashEvents');
+  if(!container)return;
+  const now=Date.now();
+  const events=store.getEvents().filter(e=>new Date(e.end).getTime()>now).sort((a,b)=>new Date(a.end)-new Date(b.end)).slice(0,6);
+  if(!events.length){container.innerHTML='<div class="empty-state"><div class="empty-icon">📅</div><p>No active events. Add one to start tracking.</p></div>';return}
+  container.innerHTML='';
+  events.forEach(ev=>{
+    const game=store.getGame(ev.gameId);
+    const completed=store.isEventCompleted(ev.id);
+    const card=document.createElement('div');
+    card.className=`event-card${completed?' ev-completed':''}`;
+    card.dataset.type=ev.type;
+    const startT=new Date(ev.start).getTime();
+    const endT=new Date(ev.end).getTime();
+    const status=now<startT?'upcoming':now<endT?'active':'ended';
+    const target=status==='upcoming'?startT:endT;
+    card.innerHTML=`
+      <button class="ev-delete" onclick="event.stopPropagation();removeEvent('${ev.id}')">✕</button>
+      <span class="ev-status ${status}">${status==='upcoming'?'Upcoming':status==='active'?'Live':'Ended'}</span>
+      <div class="ev-type">${ev.type}</div>
+      <div class="ev-name">${ev.name}</div>
+      ${game?`<div class="ev-game"><span class="game-dot" style="background:${game.color}"></span>${game.name}</div>`:''}
+      <div class="ev-countdown" data-target="${target}" data-status="${status}">${formatCountdown(target-now)}</div>
+      <div class="ev-dates">${formatDate(ev.start)} → ${formatDate(ev.end)}</div>
+      <div class="ev-complete-row">
+        <div class="ev-complete-check ${completed?'checked':''}" data-evid="${ev.id}"></div>
+        <span class="ev-complete-label">${completed?'Completed':'Mark done'}</span>
+      </div>
+    `;
+    card.querySelector('.ev-complete-check').addEventListener('click',(e)=>{
+      e.stopPropagation();
+      store.toggleEventCompleted(ev.id);
+      render();
+    });
+    container.appendChild(card);
+  });
+}
+
+// === GAME VIEW ===
+function renderGameView(el){
+  const game=store.getGame(currentGame);
+  if(!game){el.innerHTML='<div class="empty-state"><p>Game not found</p></div>';return}
+  setAccent(game.color);
+  const layout=store.data.settings.bannerLayout||'inline';
+  const showBannerTab=layout==='tab';
+  el.innerHTML=`
+    <div class="tabs">
+      <button class="tab-btn ${currentTab==='events'?'active':''}" data-tab="events">Events</button>
+      <button class="tab-btn ${currentTab==='pulls'?'active':''}" data-tab="pulls">Pulls</button>
+      ${showBannerTab?`<button class="tab-btn ${currentTab==='banners'?'active':''}" data-tab="banners">Banners</button>`:''}
+    </div>
+    <div id="tabContent"></div>
+  `;
+  el.querySelectorAll('.tab-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{currentTab=btn.dataset.tab;renderGameView(el)});
+  });
+  const tc=document.getElementById('tabContent');
+  if(currentTab==='events')renderGameEvents(tc,game);
+  else if(currentTab==='pulls')renderPulls(tc,game);
+  else if(currentTab==='banners')renderBannersTab(tc,game);
+}
+
+function renderGameEvents(el,game){
+  const now=Date.now();
+  const events=store.getEvents(game.id).sort((a,b)=>new Date(a.end)-new Date(b.end));
+  const active=events.filter(e=>new Date(e.end).getTime()>now);
+  const archived=events.filter(e=>new Date(e.end).getTime()<=now);
+  el.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <h3 style="font-family:var(--font-display);font-size:1rem;font-weight:600">Events & Banners</h3>
+      <button class="btn btn-primary btn-sm" onclick="openAddEventModal('${game.id}')">+ Add Event</button>
+    </div>
+    <div class="grid-3" id="gameEventsList"></div>
+    ${archived.length?`<div style="margin-top:24px"><h4 style="font-size:.85rem;color:var(--text-muted);margin-bottom:10px">Archived</h4><div class="grid-3" id="archivedEvents"></div></div>`:''}
+  `;
+  const container=document.getElementById('gameEventsList');
+  if(!active.length){container.innerHTML='<div class="empty-state"><div class="empty-icon">📅</div><p>No active events for this game.</p></div>';return}
+  active.forEach(ev=>container.appendChild(createEventCard(ev)));
+  if(archived.length){
+    const arch=document.getElementById('archivedEvents');
+    archived.slice(0,3).forEach(ev=>arch.appendChild(createEventCard(ev)));
+  }
+}
+
+function createEventCard(ev){
+  const game=store.getGame(ev.gameId);
+  const now=Date.now();
+  const startT=new Date(ev.start).getTime();
+  const endT=new Date(ev.end).getTime();
+  const status=now<startT?'upcoming':now<endT?'active':'ended';
+  const target=status==='upcoming'?startT:endT;
+  const isFeed=!!ev._fromFeed;
+  const completed=store.isEventCompleted(ev.id);
+  const card=document.createElement('div');
+  card.className=`event-card${isFeed?' feed-event':''}${completed?' ev-completed':''}`;
+  card.dataset.type=ev.type;
+  card.innerHTML=`
+    ${isFeed?
+      `<button class="ev-dismiss" onclick="event.stopPropagation();dismissFeedEvent('${ev.id}')" title="Dismiss">✕</button>`:
+      `<button class="ev-delete" onclick="event.stopPropagation();removeEvent('${ev.id}')">✕</button>`}
+    <span class="ev-status ${status}">${status==='upcoming'?'Upcoming':status==='active'?'Live':'Ended'}</span>
+    ${isFeed?'<span class="ev-feed-badge">FEED</span>':''}
+    <div class="ev-type">${ev.type}</div>
+    <div class="ev-name">${ev.name}</div>
+    ${game?`<div class="ev-game"><span class="game-dot" style="background:${game.color}"></span>${game.name}</div>`:''}
+    <div class="ev-countdown ${endT-now<86400000&&status==='active'?'ending':''}" data-target="${target}" data-status="${status}">${status==='ended'?'Ended':formatCountdown(target-now)}</div>
+    <div class="ev-dates">${formatDate(ev.start)} → ${formatDate(ev.end)}</div>
+    <div class="ev-complete-row">
+      <div class="ev-complete-check ${completed?'checked':''}" data-evid="${ev.id}"></div>
+      <span class="ev-complete-label">${completed?'Completed':'Mark done'}</span>
+    </div>
+  `;
+  card.querySelector('.ev-complete-check').addEventListener('click',(e)=>{
+    e.stopPropagation();
+    store.toggleEventCompleted(ev.id);
+    render();
+  });
+  return card;
+}
+
+function renderPulls(el,game){
+  if(!game.pullConfig){
+    el.innerHTML=`<div class="empty-state"><div class="empty-icon">🎰</div><p>No pull configuration yet.</p>
+      <button class="btn btn-primary btn-sm" style="margin-top:12px" onclick="initPullConfig()">Set Up Pulls</button></div>`;
+    return;
+  }
+  const pulls=store.calcPulls(game.id);
+  const ps=store.getPullState(game.id);
+  el.innerHTML=`
+    <div class="pull-summary anim-in">
+      <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:600;margin-bottom:8px">Total Pulls Available</div>
+      <div class="pull-total">${pulls.total}</div>
+      <div class="pull-breakdown">${pulls.fromCurrency} from currency + ${pulls.fromTickets} from tickets</div>
+    </div>
+    <div class="pull-section anim-in stagger-1">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div class="pull-section-label" style="margin-bottom:0">Currencies</div>
+      </div>
+      <div id="pullCurrencies"></div>
+      <div class="pull-add-btn" id="addCurrBtn">+ Add Currency</div>
+    </div>
+    <div class="pull-section anim-in stagger-2">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div class="pull-section-label" style="margin-bottom:0">Tickets</div>
+      </div>
+      <div id="pullTickets"></div>
+      <div class="pull-add-btn" id="addTickBtn">+ Add Ticket</div>
+    </div>
+  `;
+  document.getElementById('addCurrBtn').addEventListener('click',()=>openCurrencyModal(game.id));
+  document.getElementById('addTickBtn').addEventListener('click',()=>openTicketModal(game.id));
+  // Currencies
+  const currDiv=document.getElementById('pullCurrencies');
+  game.pullConfig.currencies.forEach((c,idx)=>{
+    const amt=ps.currencies[c.id]||0;
+    const detail=pulls.details.find(d=>d.name===c.name);
+    const pullCount=detail?detail.pulls:0;
+    const row=document.createElement('div');
+    row.className='pull-row';
+    row.innerHTML=`
+      <div class="pull-info">
+        <div class="pull-name">${c.name}${c.type==='premium'?' <span style="font-size:.65rem;color:var(--accent-hsr);font-weight:700">PREMIUM</span>':''}</div>
+        ${c.note?`<div class="pull-note">${c.note}</div>`:''}
+        ${c.perPull?`<div class="pull-note">${c.perPull} per pull</div>`:''}
+      </div>
+      <input type="number" class="pull-input" value="${amt}" min="0" data-currency="${c.id}">
+      <span class="pull-eq">=</span>
+      <span class="pull-result">${pullCount} pulls</span>
+      <div class="pull-actions">
+        <button class="pull-act-btn edit" title="Edit">✎</button>
+        <button class="pull-act-btn del" title="Delete">✕</button>
+      </div>
+    `;
+    row.querySelector('input').addEventListener('change',e=>{
+      store.setPullCurrency(game.id,c.id,e.target.value);
+      renderPulls(el,game);
+    });
+    row.querySelector('input').addEventListener('input',e=>{
+      const val=parseInt(e.target.value)||0;
+      const resultEl=row.querySelector('.pull-result');
+      if(c.perPull){
+        resultEl.textContent=Math.floor(val/c.perPull)+' pulls';
+      }else if(c.conversionRate&&c.convertsTo){
+        const toType=c.convertsToType||'currency';
+        if(toType==='ticket'){
+          const tt=game.pullConfig.tickets.find(x=>x.id===c.convertsTo);
+          if(tt){const ppt=tt.pullsPerTicket||1;resultEl.textContent=(Math.floor(val*c.conversionRate)*ppt)+' pulls'}
+        }else{
+          const target=game.pullConfig.currencies.find(x=>x.id===c.convertsTo);
+          if(target&&target.perPull)resultEl.textContent=Math.floor(val*c.conversionRate/target.perPull)+' pulls';
+        }
+      }
+    });
+    row.querySelector('.edit').addEventListener('click',()=>openCurrencyModal(game.id,idx));
+    row.querySelector('.del').addEventListener('click',()=>{
+      if(confirm(`Remove "${c.name}" currency?`)){store.removePullCurrency(game.id,idx);render()}
+    });
+    currDiv.appendChild(row);
+  });
+  if(!game.pullConfig.currencies.length){
+    currDiv.innerHTML='<div style="padding:8px 0;font-size:.8rem;color:var(--text-muted)">No currencies configured.</div>';
+  }
+  // Tickets
+  const tickDiv=document.getElementById('pullTickets');
+  game.pullConfig.tickets.forEach((t,idx)=>{
+    const amt=ps.tickets[t.id]||0;
+    const ppt=t.pullsPerTicket||1;
+    const tickPulls=amt*ppt;
+    const row=document.createElement('div');
+    row.className='pull-row';
+    row.innerHTML=`
+      <div class="pull-info">
+        <div class="pull-name">${t.name}</div>
+        ${t.note?`<div class="pull-note">${t.note}</div>`:''}
+        ${ppt>1?`<div class="pull-note">${ppt} pulls per ticket</div>`:''}
+      </div>
+      <input type="number" class="pull-input" value="${amt}" min="0" data-ticket="${t.id}">
+      <span class="pull-eq">=</span>
+      <span class="pull-result">${tickPulls} pulls</span>
+      <div class="pull-actions">
+        <button class="pull-act-btn edit" title="Edit">✎</button>
+        <button class="pull-act-btn del" title="Delete">✕</button>
+      </div>
+    `;
+    row.querySelector('input').addEventListener('change',e=>{
+      store.setPullTicket(game.id,t.id,e.target.value);
+      renderPulls(el,game);
+    });
+    row.querySelector('input').addEventListener('input',e=>{
+      const val=parseInt(e.target.value)||0;
+      row.querySelector('.pull-result').textContent=(val*ppt)+' pulls';
+    });
+    row.querySelector('.edit').addEventListener('click',()=>openTicketModal(game.id,idx));
+    row.querySelector('.del').addEventListener('click',()=>{
+      if(confirm(`Remove "${t.name}" ticket?`)){store.removePullTicket(game.id,idx);render()}
+    });
+    tickDiv.appendChild(row);
+  });
+  if(!game.pullConfig.tickets.length){
+    tickDiv.innerHTML='<div style="padding:8px 0;font-size:.8rem;color:var(--text-muted)">No tickets configured.</div>';
+  }
+  // Inline banner breakdown (only if layout=inline)
+  const layout=store.data.settings.bannerLayout||'inline';
+  if(layout==='inline'){
+    const bannerSection=document.createElement('div');
+    bannerSection.className='pull-section anim-in stagger-3';
+    bannerSection.innerHTML=`
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div class="pull-section-label" style="margin-bottom:0">Per-Banner Breakdown</div>
+        <button class="btn btn-sm btn-ghost" id="addBannerInline" style="font-size:.75rem">+ Add Banner</button>
+      </div>
+      <div class="grid-2" id="bannerInlineGrid"></div>
+    `;
+    el.appendChild(bannerSection);
+    document.getElementById('addBannerInline').addEventListener('click',()=>openBannerModal(game.id));
+    renderBannerCards(document.getElementById('bannerInlineGrid'),game);
+  }
+}
+
+function initPullConfig(){
+  const g=store._findGame(currentGame);
+  if(!g)return;
+  g.pullConfig={currencies:[],tickets:[],bannerTypes:[]};
+  store.save();
+  render();
+}
+
+function openCurrencyModal(gameId,editIdx){
+  const game=store.getGame(gameId);
+  const isEdit=editIdx!==undefined;
+  const existing=isEdit?game.pullConfig.currencies[editIdx]:null;
+  const hasConversion=existing&&existing.conversionRate;
+  const convToType=existing?.convertsToType||'currency';
+  // Build list of other currencies and tickets for conversion target
+  const otherCurrencies=(game.pullConfig?.currencies||[]).filter((_,i)=>i!==editIdx);
+  const allTickets=game.pullConfig?.tickets||[];
+  const targetOptions=otherCurrencies.map(c=>`<option value="currency:${c.id}" ${convToType==='currency'&&existing?.convertsTo===c.id?'selected':''}>${c.name} (currency)</option>`)
+    .concat(allTickets.map(t=>`<option value="ticket:${t.id}" ${convToType==='ticket'&&existing?.convertsTo===t.id?'selected':''}>${t.name} (ticket)</option>`));
+  openModal(`
+    <h2>${isEdit?'Edit':'Add'} Currency</h2>
+    <div class="form-group"><label>Name</label><input id="pcName" value="${existing?existing.name:''}" placeholder="e.g. Stellar Jade"></div>
+    <div class="form-group"><label>Type</label>
+      <select id="pcType">
+        <option value="free" ${existing?.type==='free'||!existing?'selected':''}>Free / Earnable</option>
+        <option value="premium" ${existing?.type==='premium'?'selected':''}>Premium / Paid</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Note (optional)</label><input id="pcNote" value="${existing?.note||''}" placeholder="e.g. Converts 1:1 to Jade"></div>
+    <div class="form-group">
+      <label>Mode</label>
+      <select id="pcMode" onchange="toggleCurrencyMode()">
+        <option value="direct" ${!hasConversion?'selected':''}>Direct cost per pull</option>
+        <option value="convert" ${hasConversion?'selected':''}>Converts to another currency or ticket</option>
+      </select>
+    </div>
+    <div id="pcDirectFields" style="${hasConversion?'display:none':''}">
+      <div class="form-group"><label>Cost Per Pull</label><input type="number" id="pcPerPull" value="${existing?.perPull||''}" min="1" placeholder="e.g. 160"></div>
+    </div>
+    <div id="pcConvertFields" style="${hasConversion?'':'display:none'}">
+      <div class="form-group"><label>Conversion Rate (how many of the target you get per 1 of this currency)</label><input type="number" id="pcConvRate" value="${existing?.conversionRate||''}" min="1" step="any" placeholder="e.g. 1"></div>
+      <div class="form-group"><label>Converts To</label>
+        <select id="pcConvTarget">
+          <option value="" disabled ${!existing?.convertsTo?'selected':''}>Select target...</option>
+          ${targetOptions.join('')}
+        </select>
+        <div style="font-size:.65rem;color:var(--text-muted);margin-top:3px">Select the currency or ticket this converts into</div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitCurrency('${gameId}',${isEdit?editIdx:'null'})">${isEdit?'Save':'Add'}</button>
+    </div>
+  `);
+}
+
+function toggleCurrencyMode(){
+  const mode=document.getElementById('pcMode').value;
+  document.getElementById('pcDirectFields').style.display=mode==='direct'?'':'none';
+  document.getElementById('pcConvertFields').style.display=mode==='convert'?'':'none';
+}
+
+function submitCurrency(gameId,editIdx){
+  const name=document.getElementById('pcName').value.trim();
+  if(!name){showToast('Name required');return}
+  const type=document.getElementById('pcType').value;
+  const note=document.getElementById('pcNote').value.trim();
+  const mode=document.getElementById('pcMode').value;
+  const id=name.toLowerCase().replace(/[^a-z0-9]+/g,'_');
+  let currency={id,name,type};
+  if(note)currency.note=note;
+  if(mode==='direct'){
+    const perPull=parseInt(document.getElementById('pcPerPull').value);
+    if(!perPull||perPull<1){showToast('Cost per pull required');return}
+    currency.perPull=perPull;
+  }else{
+    const convRate=parseFloat(document.getElementById('pcConvRate').value);
+    const targetVal=document.getElementById('pcConvTarget').value;
+    if(!convRate||!targetVal){showToast('Conversion rate and target required');return}
+    const [targetType,targetId]=targetVal.split(':');
+    currency.perPull=null;
+    currency.conversionRate=convRate;
+    currency.convertsTo=targetId;
+    currency.convertsToType=targetType; // 'currency' or 'ticket'
+  }
+  if(editIdx!==null){store.editPullCurrency(gameId,editIdx,currency)}
+  else{store.addPullCurrency(gameId,currency)}
+  closeModal();render();
+  showToast(editIdx!==null?'Currency updated':'Currency added');
+}
+
+function openTicketModal(gameId,editIdx){
+  const game=store.getGame(gameId);
+  const isEdit=editIdx!==undefined;
+  const existing=isEdit?game.pullConfig.tickets[editIdx]:null;
+  const ppt=existing?.pullsPerTicket||1;
+  openModal(`
+    <h2>${isEdit?'Edit':'Add'} Ticket</h2>
+    <div class="form-group"><label>Name</label><input id="ptName" value="${existing?existing.name:''}" placeholder="e.g. Star Rail Pass"></div>
+    <div class="form-group"><label>Pulls Per Ticket</label><input type="number" id="ptPPT" value="${ppt}" min="1" placeholder="1">
+      <div style="font-size:.65rem;color:var(--text-muted);margin-top:3px">How many pulls each ticket is worth (default: 1)</div>
+    </div>
+    <div class="form-group"><label>Note (optional)</label><input id="ptNote" value="${existing?.note||''}" placeholder="e.g. Standard banner only"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitTicket('${gameId}',${isEdit?editIdx:'null'})">${isEdit?'Save':'Add'}</button>
+    </div>
+  `);
+}
+
+function submitTicket(gameId,editIdx){
+  const name=document.getElementById('ptName').value.trim();
+  if(!name){showToast('Name required');return}
+  const note=document.getElementById('ptNote').value.trim();
+  const ppt=Math.max(1,parseInt(document.getElementById('ptPPT').value)||1);
+  const id=name.toLowerCase().replace(/[^a-z0-9]+/g,'_');
+  const ticket={id,name,pullsPerTicket:ppt};
+  if(note)ticket.note=note;
+  if(editIdx!==null){store.editPullTicket(gameId,editIdx,ticket)}
+  else{store.addPullTicket(gameId,ticket)}
+  closeModal();render();
+  showToast(editIdx!==null?'Ticket updated':'Ticket added');
+}
+
+// === BANNER TYPES ===
+function renderBannerCards(container,game){
+  const banners=game.pullConfig?.bannerTypes||[];
+  if(!banners.length){
+    container.innerHTML='<div style="padding:8px 0;font-size:.8rem;color:var(--text-muted)">No banner types configured.</div>';
+    return;
+  }
+  container.innerHTML='';
+  banners.forEach((b,idx)=>{
+    const bp=store.calcBannerPulls(game.id,b);
+    const card=document.createElement('div');
+    card.className='banner-card';
+    const acceptedNames=[];
+    (b.acceptsCurrencies||[]).forEach(cid=>{
+      const c=(game.pullConfig.currencies||[]).find(x=>x.id===cid);
+      if(c)acceptedNames.push(c.name);
+    });
+    (b.acceptsTickets||[]).forEach(tid=>{
+      const t=(game.pullConfig.tickets||[]).find(x=>x.id===tid);
+      if(t)acceptedNames.push(t.name);
+    });
+    card.innerHTML=`
+      <div class="banner-actions">
+        <button class="pull-act-btn edit" title="Edit">✎</button>
+        <button class="pull-act-btn del" title="Delete">✕</button>
+      </div>
+      <div class="banner-name">${b.name}</div>
+      <div class="banner-pulls">${bp.total} pulls</div>
+      <div class="banner-detail">${bp.breakdown.map(x=>`${x.name}: ${x.amount} (${x.pulls} pulls)`).join('<br>')}</div>
+      <div class="banner-accepted">${acceptedNames.map(n=>`<span class="banner-chip">${n}</span>`).join('')}</div>
+    `;
+    card.querySelector('.edit').addEventListener('click',()=>openBannerModal(game.id,idx));
+    card.querySelector('.del').addEventListener('click',()=>{
+      if(confirm(`Remove "${b.name}" banner type?`)){store.removeBannerType(game.id,idx);render()}
+    });
+    container.appendChild(card);
+  });
+}
+
+function renderBannersTab(el,game){
+  el.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <h3 style="font-family:var(--font-display);font-size:1rem;font-weight:600">Banner Types</h3>
+      <button class="btn btn-primary btn-sm" id="addBannerBtn">+ Add Banner</button>
+    </div>
+    <div class="grid-2" id="bannerGrid"></div>
+  `;
+  document.getElementById('addBannerBtn').addEventListener('click',()=>openBannerModal(game.id));
+  renderBannerCards(document.getElementById('bannerGrid'),game);
+}
+
+function openBannerModal(gameId,editIdx){
+  const game=store.getGame(gameId);
+  if(!game||!game.pullConfig)return;
+  const isEdit=editIdx!==undefined;
+  const existing=isEdit?game.pullConfig.bannerTypes[editIdx]:null;
+  const accC=new Set(existing?.acceptsCurrencies||[]);
+  const accT=new Set(existing?.acceptsTickets||[]);
+  const currChecks=game.pullConfig.currencies.map(c=>
+    `<label style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:.85rem;cursor:pointer">
+      <input type="checkbox" value="${c.id}" class="bm-curr" ${accC.has(c.id)?'checked':''}> ${c.name}
+    </label>`
+  ).join('');
+  const tickChecks=game.pullConfig.tickets.map(t=>
+    `<label style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:.85rem;cursor:pointer">
+      <input type="checkbox" value="${t.id}" class="bm-tick" ${accT.has(t.id)?'checked':''}> ${t.name}
+    </label>`
+  ).join('');
+  openModal(`
+    <h2>${isEdit?'Edit':'Add'} Banner Type</h2>
+    <div class="form-group"><label>Banner Name</label><input id="bmName" value="${existing?.name||''}" placeholder="e.g. Limited Banner"></div>
+    <div class="form-group">
+      <label>Accepted Currencies</label>
+      <div style="padding:4px 0">${currChecks||'<span style="color:var(--text-muted);font-size:.8rem">No currencies configured</span>'}</div>
+    </div>
+    <div class="form-group">
+      <label>Accepted Tickets</label>
+      <div style="padding:4px 0">${tickChecks||'<span style="color:var(--text-muted);font-size:.8rem">No tickets configured</span>'}</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitBanner('${gameId}',${isEdit?editIdx:'null'})">${isEdit?'Save':'Add'}</button>
+    </div>
+  `);
+}
+
+function submitBanner(gameId,editIdx){
+  const name=document.getElementById('bmName').value.trim();
+  if(!name){showToast('Name required');return}
+  const id=name.toLowerCase().replace(/[^a-z0-9]+/g,'_');
+  const acceptsCurrencies=[...document.querySelectorAll('.bm-curr:checked')].map(el=>el.value);
+  const acceptsTickets=[...document.querySelectorAll('.bm-tick:checked')].map(el=>el.value);
+  const banner={id,name,acceptsCurrencies,acceptsTickets};
+  if(editIdx!==null){store.editBannerType(gameId,editIdx,banner)}
+  else{store.addBannerType(gameId,banner)}
+  closeModal();render();
+  showToast(editIdx!==null?'Banner updated':'Banner added');
+}
+
+// === SETTINGS ===
+function renderSettings(el){
+  const allGames=[...store.data.games,...(store.data.customGames||[])];
+  const feedEnabled=store.data.settings.feedEnabled;
+  const feedUrl=store.data.settings.feedUrl||'';
+  const feedInterval=store.data.settings.feedIntervalMin||30;
+  const lastFetch=store.data.feedLastFetch;
+  const lastFetchStr=lastFetch?new Date(lastFetch).toLocaleString():'Never';
+  el.innerHTML=`
+    <div style="max-width:600px">
+      <h2 style="font-family:var(--font-display);font-size:1.3rem;margin-bottom:20px">Settings</h2>
+      <div class="setting-section">
+        <h3>Appearance</h3>
+        <div class="setting-row">
+          <div class="setting-info"><div class="setting-label">Dark Mode</div><div class="setting-desc">Toggle between dark and light themes</div></div>
+          <div class="toggle ${store.data.settings.theme==='dark'?'on':''}" onclick="toggleTheme()"></div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Banner Layout</div>
+            <div class="setting-desc">Where per-banner pull breakdown appears</div>
+          </div>
+          <select id="bannerLayoutSelect" style="width:140px;font-size:.8rem" onchange="setBannerLayout(this.value)">
+            <option value="inline" ${(store.data.settings.bannerLayout||'inline')==='inline'?'selected':''}>Inline in Pulls</option>
+            <option value="tab" ${store.data.settings.bannerLayout==='tab'?'selected':''}>Separate Tab</option>
+          </select>
+        </div>
+      </div>
+      <div class="setting-section">
+        <h3>Event Feed</h3>
+        <div class="setting-row">
+          <div class="setting-info"><div class="setting-label">Enable Event Feed</div><div class="setting-desc">Fetch events from an external JSON feed</div></div>
+          <div class="toggle ${feedEnabled?'on':''}" id="feedToggle"></div>
+        </div>
+        <div id="feedSettings" style="${feedEnabled?'':'opacity:.5;pointer-events:none'}">
+          <div class="setting-row" style="flex-wrap:wrap;gap:8px">
+            <div class="setting-info" style="width:100%">
+              <div class="setting-label">Feed URL</div>
+              <div class="setting-desc">URL to a JSON file with event data</div>
+            </div>
+            <input type="url" id="feedUrlInput" value="${feedUrl}" placeholder="https://example.com/events.json" style="flex:1;min-width:200px">
+            <button class="btn btn-sm btn-primary" onclick="saveFeedUrl()">Save</button>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Auto-refresh Interval</div>
+              <div class="setting-desc">How often to fetch new events (minutes)</div>
+            </div>
+            <input type="number" id="feedIntervalInput" value="${feedInterval}" min="5" max="1440" style="width:70px;text-align:center" onchange="saveFeedInterval(this.value)">
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Last Fetched</div>
+              <div class="setting-desc">${lastFetchStr}${store.data.feedEvents?' · '+store.data.feedEvents.length+' events cached':''}</div>
+            </div>
+            <button class="btn btn-sm btn-ghost" onclick="fetchFeedNow()">Fetch Now</button>
+          </div>
+          <div style="margin-top:10px;padding:12px;background:var(--bg-base);border-radius:var(--radius-sm);border:1px solid var(--border)">
+            <div style="font-size:.75rem;color:var(--text-muted);font-weight:600;margin-bottom:6px">Expected JSON Format</div>
+            <pre style="font-family:var(--font-mono);font-size:.7rem;color:var(--text-secondary);white-space:pre-wrap;line-height:1.5;margin:0">{
+  "lastUpdated": "2026-03-03T00:00:00Z",
+  "events": [{
+    "id": "unique_id",
+    "gameId": "hsr",
+    "name": "Event Name",
+    "type": "banner|event|maintenance",
+    "start": "2026-03-01T10:00:00Z",
+    "end": "2026-03-21T14:59:00Z"
+  }]
+}</pre>
+            <div style="font-size:.7rem;color:var(--text-muted);margin-top:6px">Valid gameId values: ${allGames.map(g=>g.id).join(', ')}</div>
+          </div>
+        </div>
+      </div>
+      <div class="setting-section">
+        <h3>Games</h3>
+        ${allGames.map(g=>`
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label" style="display:flex;align-items:center;gap:8px">
+                <span class="game-dot" style="background:${g.color};width:10px;height:10px;border-radius:50%;display:inline-block"></span>
+                ${g.name}
+                ${g.id.startsWith('custom_')?`<button class="btn-icon" style="width:24px;height:24px;font-size:.7rem" onclick="removeCustomGame('${g.id}')" title="Delete">✕</button>`:''}
+              </div>
+              <div class="setting-desc">Reset: ${g.resetHour||4}:00 AM</div>
+            </div>
+            <div class="toggle ${g.enabled!==false?'on':''}" onclick="toggleGameSetting('${g.id}')"></div>
+          </div>
+        `).join('')}
+        <button class="btn btn-ghost btn-sm" style="margin-top:10px" onclick="openAddGameModal()">+ Add Custom Game</button>
+      </div>
+      <div class="setting-section">
+        <h3>Data</h3>
+        <div class="setting-row">
+          <div class="setting-info"><div class="setting-label">Export Data</div><div class="setting-desc">Download all your data as JSON</div></div>
+          <button class="btn btn-sm btn-ghost" onclick="exportData()">Export</button>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info"><div class="setting-label">Import Data</div><div class="setting-desc">Restore data from a JSON backup</div></div>
+          <button class="btn btn-sm btn-ghost" onclick="document.getElementById('importFile').click()">Import</button>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info"><div class="setting-label">Reset All Data</div><div class="setting-desc">Clear everything and start fresh</div></div>
+          <button class="btn btn-sm" style="color:var(--accent-lc)" onclick="resetAll()">Reset</button>
+        </div>
+      </div>
+    </div>
+  `;
+  // Feed toggle handler
+  document.getElementById('feedToggle').addEventListener('click',()=>{
+    store.data.settings.feedEnabled=!store.data.settings.feedEnabled;
+    store.save();
+    render();
+  });
+}
+
+// === MODALS ===
+function openModal(html){
+  document.getElementById('modalContent').innerHTML=html;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal(){document.getElementById('modalOverlay').classList.remove('open')}
+document.getElementById('modalOverlay').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal()});
+
+function openAddEventModal(presetGame){
+  const games=store.getAllGames();
+  openModal(`
+    <h2>Add Event / Banner</h2>
+    <div class="form-group"><label>Game</label><select id="evGame">${games.map(g=>`<option value="${g.id}" ${g.id===presetGame?'selected':''}>${g.name}</option>`).join('')}</select></div>
+    <div class="form-group"><label>Name</label><input id="evName" placeholder="e.g. Character Banner"></div>
+    <div class="form-group"><label>Type</label><select id="evType"><option value="banner">Banner</option><option value="event">Event</option><option value="maintenance">Maintenance</option></select></div>
+    <div class="form-row">
+      <div class="form-group"><label>Start</label><input type="datetime-local" id="evStart"></div>
+      <div class="form-group"><label>End</label><input type="datetime-local" id="evEnd"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitEvent()">Add Event</button>
+    </div>
+  `);
+}
+
+function submitEvent(){
+  const name=document.getElementById('evName').value.trim();
+  const gameId=document.getElementById('evGame').value;
+  const type=document.getElementById('evType').value;
+  const start=document.getElementById('evStart').value;
+  const end=document.getElementById('evEnd').value;
+  if(!name||!start||!end){showToast('Please fill all fields');return}
+  store.addEvent({name,gameId,type,start,end});
+  closeModal();render();
+  showToast('Event added');
+}
+
+function openAddGameModal(){
+  openModal(`
+    <h2>Add Custom Game</h2>
+    <div class="form-group"><label>Game Name</label><input id="cgName" placeholder="e.g. Blue Archive"></div>
+    <div class="form-group"><label>Abbreviation</label><input id="cgAbbr" placeholder="e.g. BA" maxlength="6"></div>
+    <div class="form-group"><label>Accent Color</label><input type="color" id="cgColor" value="#a855f7" style="padding:4px;height:40px"></div>
+    <div class="form-group"><label>Server Reset Hour (0-23)</label><input type="number" id="cgReset" value="4" min="0" max="23"></div>
+    <div style="border-top:1px solid var(--border);margin:14px 0;padding-top:14px">
+      <div style="font-size:.85rem;font-weight:600;margin-bottom:10px">Pull Configuration</div>
+      <div class="form-group"><label>Currency Name</label><input id="cgCurrName" placeholder="e.g. Gems"></div>
+      <div class="form-group"><label>Currency Cost Per Pull</label><input type="number" id="cgCurrPerPull" placeholder="e.g. 160" min="1"></div>
+      <div class="form-group"><label>Ticket Name (optional)</label><input id="cgTicketName" placeholder="e.g. Summon Ticket"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitCustomGame()">Add Game</button>
+    </div>
+  `);
+}
+
+function submitCustomGame(){
+  const name=document.getElementById('cgName').value.trim();
+  if(!name){showToast('Name required');return}
+  const abbr=document.getElementById('cgAbbr').value.trim()||name.slice(0,3).toUpperCase();
+  const color=document.getElementById('cgColor').value;
+  const resetHour=parseInt(document.getElementById('cgReset').value)||4;
+  // Build pull config
+  const currName=document.getElementById('cgCurrName').value.trim();
+  const currPerPull=parseInt(document.getElementById('cgCurrPerPull').value);
+  const ticketName=document.getElementById('cgTicketName').value.trim();
+  const pullConfig={currencies:[],tickets:[]};
+  if(currName&&currPerPull>0){
+    pullConfig.currencies.push({id:currName.toLowerCase().replace(/\s+/g,'_'),name:currName,perPull:currPerPull,type:'free'});
+  }
+  if(ticketName){
+    pullConfig.tickets.push({id:ticketName.toLowerCase().replace(/\s+/g,'_'),name:ticketName,note:'1 ticket = 1 pull'});
+  }
+  const game={name,abbr,color,resetHour,pullConfig:pullConfig.currencies.length||pullConfig.tickets.length?pullConfig:null};
+  store.addCustomGame(game);
+  closeModal();render();
+  showToast(`${name} added`);
+}
+
+// === ACTIONS ===
+function removeEvent(id){store.removeEvent(id);render();showToast('Event removed')}
+function dismissFeedEvent(id){store.dismissFeedEvent(id);render();showToast('Event dismissed')}
+
+function toggleTheme(){
+  const t=store.data.settings.theme==='dark'?'light':'dark';
+  store.data.settings.theme=t;
+  store.save();
+  document.documentElement.dataset.theme=t;
+  render();
+}
+
+function toggleGameSetting(id){store.toggleGameEnabled(id);render()}
+
+function removeCustomGame(id){
+  if(confirm('Remove this custom game and all its data?')){
+    store.removeCustomGame(id);
+    if(currentGame===id){currentView='dashboard';currentGame=null}
+    render();
+  }
+}
+
+function exportData(){
+  const blob=new Blob([store.exportData()],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='gachatrack-backup.json';
+  a.click();
+  showToast('Data exported');
+}
+
+function importData(ev){
+  const file=ev.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    if(store.importData(e.target.result)){render();showToast('Data imported')}
+    else showToast('Invalid file');
+  };
+  reader.readAsText(file);
+  ev.target.value='';
+}
+
+function resetAll(){
+  if(confirm('This will delete ALL data. Are you sure?')){
+    localStorage.removeItem('gachatrack');
+    location.reload();
+  }
+}
+
+async function fetchFeedNow(){
+  showToast('Fetching feed...');
+  const result=await store.fetchFeed();
+  if(result.ok){showToast(`Feed updated: ${result.count} events`);render()}
+  else showToast(`Feed error: ${result.msg}`);
+}
+
+function saveFeedUrl(){
+  const url=document.getElementById('feedUrlInput').value.trim();
+  store.data.settings.feedUrl=url;
+  store.save();
+  showToast('Feed URL saved');
+}
+
+function saveFeedInterval(val){
+  store.data.settings.feedIntervalMin=Math.max(5,parseInt(val)||30);
+  store.save();
+}
+
+function setBannerLayout(val){
+  store.data.settings.bannerLayout=val;
+  store.save();
+  // If switching away from tab and currently on banners tab, reset to pulls
+  if(val==='inline'&&currentTab==='banners')currentTab='pulls';
+  render();
+}
+
+// === SIDEBAR MOBILE ===
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarBackdrop').classList.toggle('show');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarBackdrop').classList.remove('show');
+}
+document.getElementById('sidebarBackdrop').addEventListener('click',closeSidebar);
+
+// === TOAST ===
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// === HELPERS ===
+function formatCountdown(ms){
+  if(ms<=0)return'Ended';
+  const s=Math.floor(ms/1000);
+  const d=Math.floor(s/86400);
+  const h=Math.floor((s%86400)/3600);
+  const m=Math.floor((s%3600)/60);
+  const sec=s%60;
+  if(d>0)return`${d}d ${h}h ${m}m`;
+  if(h>0)return`${h}h ${m}m ${sec}s`;
+  return`${m}m ${sec}s`;
+}
+function formatDate(d){
+  const dt=new Date(d);
+  return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+
+// === LIVE TICK ===
+function tick(){
+  const now=Date.now();
+  // Update all countdown elements
+  document.querySelectorAll('.ev-countdown[data-target]').forEach(el=>{
+    const target=parseInt(el.dataset.target);
+    const status=el.dataset.status;
+    if(status==='ended')return;
+    const diff=target-now;
+    el.textContent=diff<=0?'Ended':formatCountdown(diff);
+    if(diff<86400000&&diff>0)el.classList.add('ending');
+  });
+  animFrame=requestAnimationFrame(tick);
+}
+
+// === INIT ===
+document.documentElement.dataset.theme=store.data.settings.theme||'dark';
+setAccent('#f0b232');
+render();
+tick();
+
+// Auto-fetch feed on init if enabled and stale
+(async()=>{
+  if(store.data.settings.feedEnabled&&store.data.settings.feedUrl){
+    const interval=(store.data.settings.feedIntervalMin||30)*60*1000;
+    if(Date.now()-store.data.feedLastFetch>interval){
+      const result=await store.fetchFeed();
+      if(result.ok)render();
+    }
+  }
+})();
+// Periodic feed refresh
+setInterval(async()=>{
+  if(store.data.settings.feedEnabled&&store.data.settings.feedUrl){
+    const interval=(store.data.settings.feedIntervalMin||30)*60*1000;
+    if(Date.now()-store.data.feedLastFetch>interval){
+      const result=await store.fetchFeed();
+      if(result.ok){showToast(`Feed updated: ${result.count} events`);render()}
+    }
+  }
+},60000);
+
+// === PWA ===
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+}
+</script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"75124c326cb447fe934cde04713ae013","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+</html>
