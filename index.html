@@ -124,6 +124,29 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .banner-card .banner-actions{position:absolute;top:10px;right:10px;display:flex;gap:4px;opacity:0;transition:opacity .15s}
 .banner-card:hover .banner-actions{opacity:1}
 
+/* === PITY COUNTERS === */
+.pity-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;position:relative;transition:all .2s}
+.pity-card:hover{border-color:var(--glass-border)}
+.pity-card .pity-actions{position:absolute;top:10px;right:10px;display:flex;gap:4px;opacity:0;transition:opacity .15s}
+.pity-card:hover .pity-actions{opacity:1}
+.pity-name{font-family:var(--font-display);font-size:.95rem;font-weight:600;margin-bottom:10px}
+.pity-count{font-family:var(--font-display);font-size:1.6rem;font-weight:700;color:var(--current-accent,var(--accent-hsr));margin-bottom:4px}
+.pity-count .pity-max{font-size:1rem;color:var(--text-muted);font-weight:500}
+.pity-bar{height:8px;background:var(--bg-deep);border-radius:4px;overflow:hidden;margin-bottom:8px}
+.pity-bar .fill{height:100%;border-radius:4px;transition:width .4s cubic-bezier(.4,0,.2,1);background:var(--current-accent,var(--accent-hsr))}
+.pity-bar .fill.soft{background:linear-gradient(90deg,var(--current-accent,var(--accent-hsr)),var(--accent-lc))}
+.pity-detail{font-size:.75rem;color:var(--text-muted);font-family:var(--font-mono);margin-bottom:6px}
+.pity-5050{display:inline-block;font-size:.7rem;padding:3px 10px;border-radius:10px;font-weight:600;cursor:pointer;transition:all .15s;user-select:none}
+.pity-5050.guaranteed{background:rgba(74,222,128,.12);color:#4ade80}
+.pity-5050.fiftyfifty{background:rgba(240,178,50,.12);color:var(--accent-hsr)}
+.pity-5050:hover{filter:brightness(1.2)}
+.pity-btns{display:flex;gap:6px;margin-top:10px;align-items:center}
+.pity-btns button{width:32px;height:32px;border-radius:var(--radius-sm);background:var(--bg-elevated);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:600;color:var(--text-secondary);transition:all .15s}
+.pity-btns button:hover{background:var(--bg-hover);color:var(--text-primary);border-color:var(--glass-border)}
+.pity-btns .pity-reset{width:auto;padding:0 12px;font-size:.7rem;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.5px;margin-left:auto;color:var(--text-muted)}
+.pity-btns .pity-reset:hover{color:var(--accent-lc);border-color:var(--accent-lc);background:rgba(239,68,68,.08)}
+.pity-linked{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+
 /* === FEED EVENT BADGE === */
 .ev-feed-badge{font-size:.6rem;padding:2px 6px;border-radius:4px;background:rgba(168,85,247,.15);color:#a855f7;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-left:6px}
 .event-card.feed-event{border-style:dashed}
@@ -327,6 +350,7 @@ class Store {
     this.data.feedLastFetch=0;
     this.data.feedDismissed=[];
     this.data.eventCompleted={};
+    this.data.pityState={};
     GAMES_DEFAULT.forEach(g=>{
       this.data.pullState[g.id]={currencies:{},tickets:{}};
     });
@@ -350,6 +374,7 @@ class Store {
     });
     if(!this.data.settings.bannerLayout)this.data.settings.bannerLayout='inline';
     if(!this.data.eventCompleted)this.data.eventCompleted={};
+    if(!this.data.pityState)this.data.pityState={};
     // Remove old stamina and daily data
     delete this.data.staminaState;
     delete this.data.dailyChecks;
@@ -450,6 +475,52 @@ class Store {
     const g=this._findGame(gameId);
     if(!g||!g.pullConfig||!g.pullConfig.bannerTypes)return;
     g.pullConfig.bannerTypes.splice(idx,1);
+    this.save();
+  }
+  // === PITY COUNTERS ===
+  getPityCounters(gameId){return this.data.pityState[gameId]||[]}
+  addPityCounter(gameId,counter){
+    counter.id='pity_'+Date.now();
+    if(!this.data.pityState[gameId])this.data.pityState[gameId]=[];
+    this.data.pityState[gameId].push(counter);
+    this.save();
+  }
+  editPityCounter(gameId,idx,counter){
+    if(!this.data.pityState[gameId])return;
+    this.data.pityState[gameId][idx]=counter;
+    this.save();
+  }
+  removePityCounter(gameId,idx){
+    if(!this.data.pityState[gameId])return;
+    this.data.pityState[gameId].splice(idx,1);
+    this.save();
+  }
+  incrementPity(gameId,idx,amount){
+    const counters=this.data.pityState[gameId];
+    if(!counters||!counters[idx])return;
+    const c=counters[idx];
+    const max=this._pityMax(c);
+    c.currentPulls=Math.max(0,c.currentPulls+(amount||1));
+    // Auto-reset when reaching max
+    if(c.currentPulls>=max){
+      c.currentPulls=0;
+      if(c.has5050){
+        // Toggle stage: 50/50 → guaranteed, guaranteed → 50/50
+        c.guaranteedNext=!c.guaranteedNext;
+      }
+    }
+    this.save();
+  }
+  _pityMax(counter){
+    if(counter.has5050){
+      return counter.guaranteedNext?(counter.maxPullsGuaranteed||counter.hardPity||90):(counter.maxPulls5050||counter.hardPity||90);
+    }
+    return counter.hardPity||90;
+  }
+  resetPity(gameId,idx){
+    const counters=this.data.pityState[gameId];
+    if(!counters||!counters[idx])return;
+    counters[idx].currentPulls=0;
     this.save();
   }
   calcBannerPulls(gameId,banner){
@@ -556,7 +627,21 @@ class Store {
   }
   removeEvent(id){
     this.data.events=this.data.events.filter(e=>e.id!==id);
+    // Also clean up completion state
+    if(this.data.eventCompleted)delete this.data.eventCompleted[id];
     this.save();
+  }
+  purgeExpiredEvents(){
+    const now=Date.now();
+    const before=this.data.events.length;
+    this.data.events=(this.data.events||[]).filter(e=>new Date(e.end).getTime()>now);
+    // Clean up completion state for removed events
+    if(this.data.eventCompleted){
+      const ids=new Set(this.data.events.map(e=>e.id));
+      Object.keys(this.data.eventCompleted).forEach(k=>{if(!ids.has(k))delete this.data.eventCompleted[k]});
+    }
+    if(this.data.events.length<before){this.save();return true}
+    return false;
   }
   dismissFeedEvent(id){
     if(!this.data.feedDismissed)this.data.feedDismissed=[];
@@ -602,6 +687,7 @@ class Store {
   removeCustomGame(id){
     this.data.customGames=(this.data.customGames||[]).filter(g=>g.id!==id);
     delete this.data.pullState[id];
+    delete this.data.pityState[id];
     this.data.events=(this.data.events||[]).filter(e=>e.gameId!==id);
     this.save();
   }
@@ -768,11 +854,22 @@ function renderDashboard(el){
       const bp=store.calcBannerPulls(g.id,b);
       bannerLines+=`<div class="dash-stat" style="padding-left:12px"><span class="label" style="font-size:.7rem">${b.name}</span><span class="value" style="font-size:.8rem">${bp.total} pulls</span></div>`;
     });
+    const pityCounters=store.getPityCounters(g.id);
+    let pityLines='';
+    if(pityCounters.length){
+      pityCounters.forEach(p=>{
+        const max=store._pityMax(p);
+        const status=p.has5050?(p.guaranteedNext?'guaranteed':'50/50'):'';
+        const softNote=p.softPity&&p.currentPulls>=p.softPity?' · soft!':'';
+        pityLines+=`<div class="dash-stat" style="padding-left:12px"><span class="label" style="font-size:.7rem">${p.name}</span><span class="value" style="font-size:.8rem">${p.currentPulls}/${max}${status?' ('+status+')':''}${softNote}</span></div>`;
+      });
+    }
     card.innerHTML=`
       <div class="accent-bar" style="background:${g.color}"></div>
       <div class="game-name" style="color:${g.color}">${g.name}</div>
       <div class="dash-stat"><span class="label">Total Pulls</span><span class="value">${pulls.total} available</span></div>
       ${bannerLines}
+      ${pityLines}
     `;
     card.addEventListener('click',()=>{currentView='game';currentGame=g.id;currentTab='pulls';setAccent(g.color);render()});
     grid.appendChild(card);
@@ -831,6 +928,7 @@ function renderGameView(el){
       <button class="tab-btn ${currentTab==='events'?'active':''}" data-tab="events">Events</button>
       <button class="tab-btn ${currentTab==='pulls'?'active':''}" data-tab="pulls">Pulls</button>
       ${showBannerTab?`<button class="tab-btn ${currentTab==='banners'?'active':''}" data-tab="banners">Banners</button>`:''}
+      <button class="tab-btn ${currentTab==='pity'?'active':''}" data-tab="pity">Pity</button>
     </div>
     <div id="tabContent"></div>
   `;
@@ -841,28 +939,22 @@ function renderGameView(el){
   if(currentTab==='events')renderGameEvents(tc,game);
   else if(currentTab==='pulls')renderPulls(tc,game);
   else if(currentTab==='banners')renderBannersTab(tc,game);
+  else if(currentTab==='pity')renderPityTab(tc,game);
 }
 
 function renderGameEvents(el,game){
   const now=Date.now();
-  const events=store.getEvents(game.id).sort((a,b)=>new Date(a.end)-new Date(b.end));
-  const active=events.filter(e=>new Date(e.end).getTime()>now);
-  const archived=events.filter(e=>new Date(e.end).getTime()<=now);
+  const events=store.getEvents(game.id).filter(e=>new Date(e.end).getTime()>now).sort((a,b)=>new Date(a.end)-new Date(b.end));
   el.innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
       <h3 style="font-family:var(--font-display);font-size:1rem;font-weight:600">Events & Banners</h3>
       <button class="btn btn-primary btn-sm" onclick="openAddEventModal('${game.id}')">+ Add Event</button>
     </div>
     <div class="grid-3" id="gameEventsList"></div>
-    ${archived.length?`<div style="margin-top:24px"><h4 style="font-size:.85rem;color:var(--text-muted);margin-bottom:10px">Archived</h4><div class="grid-3" id="archivedEvents"></div></div>`:''}
   `;
   const container=document.getElementById('gameEventsList');
-  if(!active.length){container.innerHTML='<div class="empty-state"><div class="empty-icon">📅</div><p>No active events for this game.</p></div>';return}
-  active.forEach(ev=>container.appendChild(createEventCard(ev)));
-  if(archived.length){
-    const arch=document.getElementById('archivedEvents');
-    archived.slice(0,3).forEach(ev=>arch.appendChild(createEventCard(ev)));
-  }
+  if(!events.length){container.innerHTML='<div class="empty-state"><div class="empty-icon">📅</div><p>No active events for this game.</p></div>';return}
+  events.forEach(ev=>container.appendChild(createEventCard(ev)));
 }
 
 function createEventCard(ev){
@@ -1215,6 +1307,192 @@ function renderBannersTab(el,game){
   renderBannerCards(document.getElementById('bannerGrid'),game);
 }
 
+// === PITY COUNTERS ===
+function renderPityTab(el,game){
+  const counters=store.getPityCounters(game.id);
+  if(!counters.length){
+    el.innerHTML=`
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <h3 style="font-family:var(--font-display);font-size:1rem;font-weight:600">Pity Counters</h3>
+        <button class="btn btn-primary btn-sm" id="addPityBtn">+ Add Counter</button>
+      </div>
+      <div class="empty-state"><div class="empty-icon">🎯</div><p>No pity counters yet. Add one to start tracking.</p></div>
+    `;
+    document.getElementById('addPityBtn').addEventListener('click',()=>openPityModal(game.id));
+    return;
+  }
+  el.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <h3 style="font-family:var(--font-display);font-size:1rem;font-weight:600">Pity Counters</h3>
+      <button class="btn btn-primary btn-sm" id="addPityBtn">+ Add Counter</button>
+    </div>
+    <div class="grid-2" id="pityGrid"></div>
+  `;
+  document.getElementById('addPityBtn').addEventListener('click',()=>openPityModal(game.id));
+  renderPityCards(document.getElementById('pityGrid'),game);
+}
+
+function renderPityCards(container,game){
+  const counters=store.getPityCounters(game.id);
+  container.innerHTML='';
+  counters.forEach((p,idx)=>{
+    const max=store._pityMax(p);
+    const pct=Math.min(100,Math.round((p.currentPulls/max)*100));
+    const inSoft=p.softPity&&p.currentPulls>=p.softPity;
+    const bannerNames=(p.linkedBanners||[]).map(bid=>{
+      const b=(game.pullConfig?.bannerTypes||[]).find(x=>x.id===bid);
+      return b?b.name:bid;
+    });
+    const card=document.createElement('div');
+    card.className='pity-card';
+
+    // Build stage info
+    let stageHtml='';
+    if(p.has5050){
+      const stageLabel=p.guaranteedNext?'Guaranteed':'50/50';
+      const stageCls=p.guaranteedNext?'guaranteed':'fiftyfifty';
+      stageHtml=`<span class="pity-5050 ${stageCls}" data-idx="${idx}">${stageLabel}</span>`;
+    }
+
+    // Build detail line
+    let detailHtml='';
+    if(p.softPity){
+      detailHtml+=`<div class="pity-detail">${inSoft?'In soft pity range!':'Soft pity at '+p.softPity}</div>`;
+    }
+    if(p.has5050){
+      detailHtml+=`<div class="pity-detail">${p.maxPulls5050||p.hardPity} pulls (50/50) · ${p.maxPullsGuaranteed||p.hardPity} pulls (guaranteed)</div>`;
+    }
+
+    card.innerHTML=`
+      <div class="pity-actions">
+        <button class="pull-act-btn edit" title="Edit">✎</button>
+        <button class="pull-act-btn del" title="Delete">✕</button>
+      </div>
+      <div class="pity-name">${p.name}</div>
+      <div class="pity-count">${p.currentPulls} <span class="pity-max">/ ${max}</span></div>
+      <div class="pity-bar"><div class="fill ${inSoft?'soft':''}" style="width:${pct}%"></div></div>
+      ${detailHtml}
+      ${stageHtml?`<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">${stageHtml}</div>`:''}
+      ${bannerNames.length?`<div class="pity-linked">${bannerNames.map(n=>`<span class="banner-chip">${n}</span>`).join('')}</div>`:''}
+      <div class="pity-btns">
+        <button class="pity-dec" title="Subtract 1">−</button>
+        <button class="pity-inc" title="Add 1">+</button>
+        <button class="pity-reset" title="Reset to 0">Reset</button>
+      </div>
+    `;
+    card.querySelector('.edit').addEventListener('click',()=>openPityModal(game.id,idx));
+    card.querySelector('.del').addEventListener('click',()=>{
+      if(confirm(`Remove "${p.name}" pity counter?`)){store.removePityCounter(game.id,idx);render()}
+    });
+    const badge5050=card.querySelector('.pity-5050');
+    if(badge5050){
+      badge5050.addEventListener('click',()=>{
+        const c=store.getPityCounters(game.id)[idx];
+        c.guaranteedNext=!c.guaranteedNext;
+        store.editPityCounter(game.id,idx,c);
+        render();
+      });
+    }
+    card.querySelector('.pity-inc').addEventListener('click',()=>{store.incrementPity(game.id,idx,1);render()});
+    card.querySelector('.pity-dec').addEventListener('click',()=>{store.incrementPity(game.id,idx,-1);render()});
+    card.querySelector('.pity-reset').addEventListener('click',()=>{
+      if(confirm('Reset pity counter to 0?')){store.resetPity(game.id,idx);render()}
+    });
+    container.appendChild(card);
+  });
+}
+
+function openPityModal(gameId,editIdx){
+  const game=store.getGame(gameId);
+  if(!game)return;
+  const isEdit=editIdx!==undefined;
+  const existing=isEdit?store.getPityCounters(gameId)[editIdx]:null;
+  const linked=new Set(existing?.linkedBanners||[]);
+  const has5050=existing?.has5050!==undefined?existing.has5050:true;
+  const bannerChecks=(game.pullConfig?.bannerTypes||[]).map(b=>
+    `<label style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:.85rem;cursor:pointer">
+      <input type="checkbox" value="${b.id}" class="pm-banner" ${linked.has(b.id)?'checked':''}> ${b.name}
+    </label>`
+  ).join('');
+  openModal(`
+    <h2>${isEdit?'Edit':'Add'} Pity Counter</h2>
+    <div class="form-group"><label>Name</label><input id="pmName" value="${existing?.name||''}" placeholder="e.g. Character Pity"></div>
+    <div class="form-group"><label>Soft Pity (optional)</label><input type="number" id="pmSoft" value="${existing?.softPity||''}" min="0" placeholder="e.g. 74"></div>
+    <div class="form-group">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+        <input type="checkbox" id="pmHas5050" ${has5050?'checked':''} onchange="togglePityMode()">
+        This banner has a 50/50 mechanic
+      </label>
+    </div>
+    <div id="pmSimpleFields" style="${has5050?'display:none':''}">
+      <div class="form-group"><label>Hard Pity (max pulls to guarantee)</label><input type="number" id="pmHard" value="${existing?.hardPity||90}" min="1" placeholder="e.g. 90"></div>
+    </div>
+    <div id="pm5050Fields" style="${has5050?'':'display:none'}">
+      <div class="form-row">
+        <div class="form-group"><label>Max Pulls (50/50 stage)</label><input type="number" id="pmMax5050" value="${existing?.maxPulls5050||existing?.hardPity||90}" min="1" placeholder="e.g. 90"></div>
+        <div class="form-group"><label>Max Pulls (guaranteed stage)</label><input type="number" id="pmMaxGuaranteed" value="${existing?.maxPullsGuaranteed||existing?.hardPity||90}" min="1" placeholder="e.g. 90"></div>
+      </div>
+      <div class="form-group">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+          <input type="checkbox" id="pmGuaranteed" ${existing?.guaranteedNext?'checked':''}>
+          Currently on guaranteed (lost last 50/50)
+        </label>
+      </div>
+    </div>
+    <div class="form-group"><label>Current Pulls</label><input type="number" id="pmCurrent" value="${existing?.currentPulls||0}" min="0"></div>
+    <div class="form-group">
+      <label>Linked Banner Types</label>
+      <div style="padding:4px 0">${bannerChecks||'<span style="color:var(--text-muted);font-size:.8rem">No banner types configured</span>'}</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitPity('${gameId}',${isEdit?editIdx:'null'})">${isEdit?'Save':'Add'}</button>
+    </div>
+  `);
+}
+
+function togglePityMode(){
+  const on=document.getElementById('pmHas5050').checked;
+  document.getElementById('pmSimpleFields').style.display=on?'none':'';
+  document.getElementById('pm5050Fields').style.display=on?'':'none';
+}
+
+function submitPity(gameId,editIdx){
+  const name=document.getElementById('pmName').value.trim();
+  if(!name){showToast('Name required');return}
+  const has5050=document.getElementById('pmHas5050').checked;
+  const softPity=parseInt(document.getElementById('pmSoft').value)||0;
+  const currentPulls=Math.max(0,parseInt(document.getElementById('pmCurrent').value)||0);
+  const linkedBanners=[...document.querySelectorAll('.pm-banner:checked')].map(el=>el.value);
+  let counter={name,has5050,softPity,currentPulls,linkedBanners};
+  if(has5050){
+    const maxPulls5050=parseInt(document.getElementById('pmMax5050').value);
+    const maxPullsGuaranteed=parseInt(document.getElementById('pmMaxGuaranteed').value);
+    if(!maxPulls5050||maxPulls5050<1){showToast('Max pulls for 50/50 stage required');return}
+    if(!maxPullsGuaranteed||maxPullsGuaranteed<1){showToast('Max pulls for guaranteed stage required');return}
+    counter.maxPulls5050=maxPulls5050;
+    counter.maxPullsGuaranteed=maxPullsGuaranteed;
+    counter.hardPity=maxPulls5050; // fallback
+    counter.guaranteedNext=document.getElementById('pmGuaranteed').checked;
+    if(softPity&&softPity>=maxPulls5050){showToast('Soft pity must be less than 50/50 max');return}
+  }else{
+    const hardPity=parseInt(document.getElementById('pmHard').value);
+    if(!hardPity||hardPity<1){showToast('Hard pity must be at least 1');return}
+    if(softPity&&softPity>=hardPity){showToast('Soft pity must be less than hard pity');return}
+    counter.hardPity=hardPity;
+    counter.guaranteedNext=false;
+  }
+  if(editIdx!==null){
+    const existing=store.getPityCounters(gameId)[editIdx];
+    counter.id=existing?.id||('pity_'+Date.now());
+    store.editPityCounter(gameId,editIdx,counter);
+  }else{
+    store.addPityCounter(gameId,counter);
+  }
+  closeModal();render();
+  showToast(editIdx!==null?'Pity counter updated':'Pity counter added');
+}
+
 function openBannerModal(gameId,editIdx){
   const game=store.getGame(gameId);
   if(!game||!game.pullConfig)return;
@@ -1395,8 +1673,8 @@ function openAddEventModal(presetGame){
     <div class="form-group"><label>Name</label><input id="evName" placeholder="e.g. Character Banner"></div>
     <div class="form-group"><label>Type</label><select id="evType"><option value="banner">Banner</option><option value="event">Event</option><option value="maintenance">Maintenance</option></select></div>
     <div class="form-row">
-      <div class="form-group"><label>Start</label><input type="datetime-local" id="evStart"></div>
-      <div class="form-group"><label>End</label><input type="datetime-local" id="evEnd"></div>
+      <div class="form-group"><label>Start Date</label><input type="date" id="evStart"></div>
+      <div class="form-group"><label>End Date</label><input type="date" id="evEnd"></div>
     </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
@@ -1409,9 +1687,12 @@ function submitEvent(){
   const name=document.getElementById('evName').value.trim();
   const gameId=document.getElementById('evGame').value;
   const type=document.getElementById('evType').value;
-  const start=document.getElementById('evStart').value;
-  const end=document.getElementById('evEnd').value;
-  if(!name||!start||!end){showToast('Please fill all fields');return}
+  const startDate=document.getElementById('evStart').value;
+  const endDate=document.getElementById('evEnd').value;
+  if(!name||!startDate||!endDate){showToast('Please fill all fields');return}
+  // Start at beginning of the day, end at end of the day (23:59:59)
+  const start=startDate+'T00:00';
+  const end=endDate+'T23:59';
   store.addEvent({name,gameId,type,start,end});
   closeModal();render();
   showToast('Event added');
@@ -1575,6 +1856,7 @@ function formatDate(d){
 }
 
 // === LIVE TICK ===
+let lastPurge=0;
 function tick(){
   const now=Date.now();
   // Update all countdown elements
@@ -1586,12 +1868,18 @@ function tick(){
     el.textContent=diff<=0?'Ended':formatCountdown(diff);
     if(diff<86400000&&diff>0)el.classList.add('ending');
   });
+  // Purge expired events every 60 seconds
+  if(now-lastPurge>60000){
+    lastPurge=now;
+    if(store.purgeExpiredEvents())render();
+  }
   animFrame=requestAnimationFrame(tick);
 }
 
 // === INIT ===
 document.documentElement.dataset.theme=store.data.settings.theme||'dark';
 setAccent('#f0b232');
+store.purgeExpiredEvents();
 render();
 tick();
 
